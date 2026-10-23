@@ -23,13 +23,13 @@ npm start
 
 ## Offline bookshop accounts
 
-The first run creates a local administrator account with username `P321` and demo password `1234`. These are demo-only credentials. The administrator must replace the demo password at the first sign-in; use a unique password of at least 10 characters. The password is not displayed on the login screen and is stored as a salted PBKDF2-SHA-256 hash in a separate IndexedDB database.
+With no provisioned administrator seed, the first run creates a local demo administrator `P321 / 1234`; the first sign-in requires a new password of 10–128 characters. The included shared `P321` seed currently uses `1234` as requested. This is a very weak password and is not recommended for a publicly accessible deployment; anyone who knows it can sign in. The seed stores a salted PBKDF2-SHA-256 hash, never the plaintext password. Once signed in, the app has no password change or reset control. To change it, generate a new source seed and deploy; on initialization the source seed updates the existing matching administrator while keeping its local workspace ID.
 
-New customer accounts are provisioned **only in source code**; the application has no account-creation or account-import action. To add one:
+Customer accounts are provisioned **only in source code**; the application has no account-creation, account-import, or password-reset action. To create the shared administrator seed or a customer seed:
 
-1. Run `node scripts/generate-local-account-seed.mjs` in a terminal. Enter a unique account ID, username, shop name, optional owner/contact label, and an initial password (password input is hidden).
-2. Copy the generated JSON record into `provisionedAccountSeeds` in [`src/data/local-account-seeds.ts`](./src/data/local-account-seeds.ts). The record contains a salted PBKDF2-SHA-256 hash and salt, not the plaintext password. Never commit or share the password.
-3. Build and deploy the app. When it next initializes, it adds new seed IDs without overwriting existing local accounts; duplicate IDs/usernames or invalid hashes stop initialization with an error. Give the initial password to the customer securely; the customer must change it at first sign-in.
+1. Run `node scripts/generate-local-account-seed.mjs` from an interactive terminal. For the shared account, enter ID `admin-p321`, username `P321`, your bookshop name, and role `admin`. Enter a password of 10–128 characters in the hidden prompt. Do not send or commit the password.
+2. Add the generated record to `provisionedAccountSeeds` in [`src/data/local-account-seeds.ts`](./src/data/local-account-seeds.ts). The record contains a salted hash and salt, not the plaintext password.
+3. Run `npm run build`, then import/connect this GitHub repository in Vercel and deploy it as a Next.js project. Vercel supports the app's Next.js API routes; GitHub Pages does not. The same source-seeded `P321` credentials will then be initialized on localhost and Vercel in their separate browser profiles. Local user data is still not shared between them.
 
 The seed format is:
 
@@ -42,15 +42,17 @@ The seed format is:
   passwordHash: "<32-byte PBKDF2-SHA-256-310000 hash, base64>",
   salt: "<16-byte random salt, base64>",
   active: true,
-  createdAt: 1735689600000
+  createdAt: 1735689600000,
+  role: "admin",
+  mustChangePassword: false
 }
 ```
 
-After signing in, an administrator can open **Account management** to view locally known accounts, change shop names/usernames, reset passwords, activate or deactivate accounts, change the administrator password, and export account metadata. Exported JSON contains salted password hashes (never plaintext passwords), so treat it as sensitive. It is a backup/report only; the app does not import it or create accounts from it. Reset passwords are displayed once in the management screen; provide them to the customer securely.
+After signing in, an administrator can open **Account management** to view locally known accounts, change shop names/usernames, activate or deactivate customer accounts, and export account metadata. The application does not allow account users or administrators to change/reset passwords. Exported JSON contains salted password hashes (never plaintext passwords), so treat it as sensitive. It is a backup/report only; the app does not import it or create accounts from it.
 
 Each account gets its own IndexedDB workspace for sticker designs, templates, assets, print orders, CV drafts, and saved past papers. On the first administrator sign-in, existing workspace records are copied to the administrator's new workspace; the original database is left in place. Existing local recent lists and preferences are copied as well. New bookshop accounts start with empty workspaces. Account data is specific to the browser profile and does not synchronize to other devices.
 
-The production app registers a service worker that caches the app shell and loaded application assets for offline reopening after the first online load. Account setup, sign-in, password changes, and locally saved work continue offline after the app has loaded and initialized. Use the production build over HTTPS (or localhost) to install the PWA; the development server does not register the service worker. Online source searches and uncached remote content still require internet access.
+The production app registers a service worker that caches the app shell and loaded application assets for offline reopening after the first online load. Sign-in and locally saved work continue offline after the app has loaded and initialized. Use the production build over HTTPS (or localhost) to install the PWA; the development server does not register the service worker. Online source searches and uncached remote content still require internet access.
 
 This is browser-local authentication, not a server security boundary. Someone with full access to the computer, browser profile, or developer tools can alter local storage or bypass the UI. The demo account and local password hashes do not provide commercial licensing, centralized identity, cross-device synchronization, or secure recovery. Those require a trusted backend and should be designed separately before commercial deployment.
 

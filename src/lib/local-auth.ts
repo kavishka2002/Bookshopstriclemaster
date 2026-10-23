@@ -18,11 +18,12 @@ export interface LocalAccount {
   mustChangePassword: boolean;
   salt: string;
   passwordHash: string;
+  provisionedPasswordHash?: string;
   createdAt: number;
   failedAttempts: number;
   lockedUntil: number;
 }
-export type PublicAccount = Omit<LocalAccount, "normalizedUsername" | "salt" | "passwordHash" | "failedAttempts" | "lockedUntil">;
+export type PublicAccount = Omit<LocalAccount, "normalizedUsername" | "salt" | "passwordHash" | "provisionedPasswordHash" | "failedAttempts" | "lockedUntil">;
 
 function openAuthDb(): Promise<IDBDatabase> {
   if (typeof indexedDB === "undefined") return Promise.reject(new Error("Offline account storage is unavailable in this browser."));
@@ -88,12 +89,6 @@ export function validateUsername(username: string): string {
 
 export async function initializeLocalAccounts(): Promise<void> {
   const current = await request<LocalAccount[]>("accounts", "readonly", store => store.getAll());
-  const password = current.length === 0 ? await createPasswordRecord(DEMO_PASSWORD) : undefined;
-  const admin: LocalAccount | undefined = password ? {
-    id: crypto.randomUUID(), username: DEMO_USERNAME, normalizedUsername: normalize(DEMO_USERNAME),
-    bookshopName: "Little Paper Demo Bookshop", ownerContact: "", role: "admin", active: true,
-    mustChangePassword: true, ...password, createdAt: Date.now(), failedAttempts: 0, lockedUntil: 0
-  } : undefined;
   const seeds = provisionedAccountSeeds.map(seed => {
     if (!seed || typeof seed.id !== "string" || typeof seed.username !== "string" ||
         typeof seed.shopName !== "string" || typeof seed.ownerContact !== "string" ||
@@ -106,6 +101,11 @@ export async function initializeLocalAccounts(): Promise<void> {
         !Number.isFinite(seed.createdAt) || typeof seed.active !== "boolean") {
       throw new Error(`Invalid source-provisioned account record: ${seed.id || username}`);
     }
+    const role = seed.role ?? "shop";
+    if ((role !== "admin" && role !== "shop") ||
+        (seed.mustChangePassword !== undefined && typeof seed.mustChangePassword !== "boolean")) {
+      throw new Error(`Invalid role or password-change setting for source-provisioned account ${username}.`);
+    }
     const hash = decode(seed.passwordHash);
     const salt = decode(seed.salt);
     if (hash.length !== 32 || salt.length !== 16 || encode(hash) !== seed.passwordHash || encode(salt) !== seed.salt) {
@@ -113,8 +113,9 @@ export async function initializeLocalAccounts(): Promise<void> {
     }
     return {
       id: seed.id, username, normalizedUsername: normalize(username), bookshopName: seed.shopName.trim(),
-      ownerContact: seed.ownerContact, role: "shop" as const, active: seed.active,
-      mustChangePassword: true, salt: seed.salt, passwordHash: seed.passwordHash,
+      ownerContact: seed.ownerContact, role, active: seed.active,
+      mustChangePassword: seed.mustChangePassword ?? role === "shop", salt: seed.salt, passwordHash: seed.passwordHash,
+      provisionedPasswordHash: seed.passwordHash,
       createdAt: seed.createdAt, failedAttempts: 0, lockedUntil: 0
     };
   });
@@ -122,6 +123,16 @@ export async function initializeLocalAccounts(): Promise<void> {
       new Set(seeds.map(seed => seed.normalizedUsername)).size !== seeds.length) {
     throw new Error("Source-provisioned accounts contain duplicate IDs or usernames.");
   }
+  if (seeds.filter(seed => seed.role === "admin").length > 1) {
+    throw new Error("Only one source-provisioned administrator account is allowed.");
+  }
+  const hasSeedAdmin = seeds.some(seed => seed.role === "admin");
+  const password = current.length === 0 && !hasSeedAdmin ? await createPasswordRecord(DEMO_PASSWORD) : undefined;
+  const admin: LocalAccount | undefined = password ? {
+    id: crypto.randomUUID(), username: DEMO_USERNAME, normalizedUsername: normalize(DEMO_USERNAME),
+    bookshopName: "Little Paper Demo Bookshop", ownerContact: "", role: "admin", active: true,
+    mustChangePassword: true, ...password, createdAt: Date.now(), failedAttempts: 0, lockedUntil: 0
+  } : undefined;
   const database = await openAuthDb();
   await new Promise<void>((resolve, reject) => {
     const transaction = database.transaction("accounts", "readwrite");
@@ -131,11 +142,41 @@ export async function initializeLocalAccounts(): Promise<void> {
       const accounts = read.result as LocalAccount[];
       try {
         if (accounts.length === 0) {
-          if (admin) store.add(admin);
+          if (hasSeedAdmin) {
+            const seededAdmin = seeds.find(seed => seed.role === "admin");
+            if (seededAdmin) {
+              store.add(seededAdmin);
+              accounts.push(seededAdmin);
+            }
+          } else if (admin) {
+            store.add(admin);
+            accounts.push(admin);
+          }
         }
         for (const seed of seeds) {
-          const sameId = accounts.find(account => account.id === seed.id);
-          if (sameId) continue;
+          const existing = accounts.find(account => account.id === seed.id) ??
+            accounts.find(account => account.normalizedUsername === seed.normalizedUsername && account.role === "admin" && seed.role === "admin");
+          if (existing) {
+            if (existing.role !== seed.role ||
+                (existing.id === seed.id && existing.normalizedUsername !== seed.normalizedUsername)) {
+              throw new Error(`Source-provisioned account ID ${seed.id} is already in use.`);
+            }
+            if (accounts.some(account => account.id !== existing.id && account.normalizedUsername === seed.normalizedUsername)) {
+              throw new Error(`Source-provisioned username ${seed.username} is already in use.`);
+            }
+            const updated = { ...existing };
+            if (existing.provisionedPasswordHash !== seed.passwordHash) {
+              updated.mustChangePassword = seed.mustChangePassword;
+              updated.salt = seed.salt;
+              updated.passwordHash = seed.passwordHash;
+              updated.provisionedPasswordHash = seed.passwordHash;
+              updated.failedAttempts = 0;
+              updated.lockedUntil = 0;
+            }
+            store.put(updated);
+            accounts[accounts.indexOf(existing)] = updated;
+            continue;
+          }
           if (accounts.some(account => account.normalizedUsername === seed.normalizedUsername) ||
               (admin?.normalizedUsername === seed.normalizedUsername && accounts.length === 0)) {
             throw new Error(`Source-provisioned username ${seed.username} is already in use.`);

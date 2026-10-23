@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent, typ
 import { BookOpen, Download, Eye, EyeOff, KeyRound, LogOut, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
 import { AppLanguageProvider, LanguageToggle, useAppLanguage } from "@/components/app-language";
 import {
-  backupAccountMetadata, changeLocalShopName, changeLocalUsername, generateInitialPassword, initializeLocalAccounts,
+  backupAccountMetadata, changeLocalShopName, changeLocalUsername, initializeLocalAccounts,
   isLegacyDataMigrated, listLocalAccounts, loginLocalAccount, markLegacyDataMigrated, saveAccountPassword,
   updateLocalAccount, validatePassword, type LocalAccount, type PublicAccount
 } from "@/lib/local-auth";
@@ -14,15 +14,14 @@ const messages = {
   si: {
     welcome: "ඔබගේ පොත්හල වැඩබිමට සාදරයෙන් පිළිගනිමු", intro: "ඔබගේ නිර්මාණ සහ මුද්‍රණ කටයුතු එකම තැනකින් කළමනාකරණය කරන්න.",
     username: "පරිශීලක නාමය", password: "මුරපදය", remember: "පරිශීලක නාමය මතක තබාගන්න", login: "ඇතුළු වන්න",
-    offline: "අන්තර්ජාලය නොමැතිව ක්‍රියා කරයි", online: "මාර්ගගතයි", loading: "ගිණුම් සකසමින්…", demo: "පළමු පරිපාලක පිවිසුමෙන් පසු මුරපදය වෙනස් කළ යුතුය.",
+    offline: "අන්තර්ජාලය නොමැතිව ක්‍රියා කරයි", online: "මාර්ගගතයි", loading: "ගිණුම් සකසමින්…", demo: "Demo P321 ගිණුම පළමු වරට password එක වෙනස් කළ යුතුයි. Provision කළ ගිණුමට දුන් password එකෙන් පිවිසෙන්න.",
     initialPassword: "මුල් පිවිසුම සඳහා නව මුරපදයක් තෝරන්න", newPassword: "නව මුරපදය", confirmPassword: "නව මුරපදය තහවුරු කරන්න",
     updatePassword: "මුරපදය යාවත්කාලීන කරන්න", error: "පිවිසීමට නොහැකි විය", bookshop: "පොත්හල", manager: "ගිණුම් කළමනාකරණය",
     back: "වැඩබිමට ආපසු", logout: "ඉවත් වන්න", account: "ගිණුම",
-    shopName: "පොත්හලේ නම", savedCredentials: "මෙම තාවකාලික මුරපදය එක්වරක් පමණක් පෙන්වයි. ආරක්ෂිතව ලබා දෙන්න.",
+    shopName: "පොත්හලේ නම",
     accounts: "දේශීය ගිණුම්", search: "නම හෝ පොත්හල සොයන්න", active: "සක්‍රිය", inactive: "අක්‍රිය", admin: "පරිපාලක",
-    deactivate: "අක්‍රිය කරන්න", activate: "සක්‍රිය කරන්න", reset: "මුරපදය නැවත සකසන්න", changeUser: "පරිශීලක නාමය වෙනස් කරන්න",
-    created: "සාදන ලද දිනය", changeOwn: "ඔබගේ මුරපදය වෙනස් කරන්න", currentPassword: "වත්මන් මුරපදය",
-    change: "මුරපදය වෙනස් කරන්න", backup: "ගිණුම් තොරතුරු අපනයනය",
+    deactivate: "අක්‍රිය කරන්න", activate: "සක්‍රිය කරන්න", changeUser: "පරිශීලක නාමය වෙනස් කරන්න",
+    created: "සාදන ලද දිනය", backup: "ගිණුම් තොරතුරු අපනයනය",
     security: "මෙම ගිණුම් මෙම බ්‍රවුසරයේ පමණක් පවතී. උපාංගය හෝ බ්‍රවුසර දත්ත වෙත සම්පූර්ණ ප්‍රවේශයක් ඇති අයෙකුගෙන් ඒවා ආරක්ෂා නොවේ. වෙනත් පරිගණක සමඟ ස්වයංක්‍රීයව සමමුහුර්ත නොවේ.",
     data: "පවතින වැඩබිම් දත්ත පළමු පරිපාලක ගිණුමට පිටපත් කරයි; මුල් දත්ත මකා නොදමයි. සෑම පොත්හලකටම වෙනම දේශීය දත්ත ගබඩාවක් ඇත.",
     codeProvisioning: "නව පාරිභෝගික ගිණුම් මෙහි සාදන්න බැහැ. ඒවා source code හි local-account-seeds.ts වෙත hash කළ මුරපද සමඟ එක් කර app එක නැවත build කරන්න.",
@@ -31,15 +30,14 @@ const messages = {
   en: {
     welcome: "Welcome to your bookshop workspace", intro: "Manage your designs and print work from one calm, focused place.",
     username: "Username", password: "Password", remember: "Remember username", login: "Sign in",
-    offline: "Working offline", online: "Online", loading: "Preparing local accounts…", demo: "Change the password after the first administrator sign-in.",
+    offline: "Working offline", online: "Online", loading: "Preparing local accounts…", demo: "Demo P321 requires a one-time password update. Sign in to provisioned accounts with the assigned password.",
     initialPassword: "Choose a new password to continue", newPassword: "New password", confirmPassword: "Confirm new password",
     updatePassword: "Update password", error: "Unable to sign in", bookshop: "Bookshop", manager: "Account management",
     back: "Back to workspace", logout: "Sign out", account: "Account",
-    shopName: "Bookshop name", savedCredentials: "This temporary password is shown once. Share it securely.",
+    shopName: "Bookshop name",
     accounts: "Local accounts", search: "Search username or bookshop", active: "Active", inactive: "Inactive", admin: "Administrator",
-    deactivate: "Deactivate", activate: "Activate", reset: "Reset password", changeUser: "Change username",
-    created: "Created", changeOwn: "Change your password", currentPassword: "Current password",
-    change: "Change password", backup: "Export account backup",
+    deactivate: "Deactivate", activate: "Activate", changeUser: "Change username",
+    created: "Created", backup: "Export account backup",
     security: "These accounts exist only in this browser profile. They cannot protect against someone with full access to the device or browser data and do not synchronize to other computers.",
     data: "Existing workspace data is copied to the first administrator account; the original data is not deleted. Each bookshop gets a separate local database.",
     codeProvisioning: "New customer accounts cannot be created here. Add them with hashed passwords to local-account-seeds.ts in source code, then rebuild the app.",
@@ -193,7 +191,7 @@ function GateContent({ children }: { children: ReactNode }) {
 
   return <div className="auth-app-shell">
     <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><BookOpen size={16}/></div><span>Little Paper</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
-    {showManager && account.role === "admin" ? <AccountManager current={account} language={language} onClose={() => setShowManager(false)}/> : children}
+    {showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}
   </div>;
 }
 
@@ -214,14 +212,11 @@ function PasswordChangeRequired({ account, text, error, busy, onSubmit, onLangua
   </section></main>;
 }
 
-function AccountManager({ current, language, onClose }: { current: LocalAccount; language: "si" | "en"; onClose: () => void }) {
+function AccountManager({ language, onClose }: { language: "si" | "en"; onClose: () => void }) {
   const text = messages[language];
   const [accounts, setAccounts] = useState<PublicAccount[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
-  const [createdCredentials, setCreatedCredentials] = useState<{ username: string; password: string } | null>(null);
-  const [ownPasswordError, setOwnPasswordError] = useState("");
-  const [ownPasswordNotice, setOwnPasswordNotice] = useState("");
   const filtered = useMemo(() => accounts.filter(item => `${item.username} ${item.bookshopName} ${item.ownerContact}`.toLowerCase().includes(search.toLowerCase())), [accounts, search]);
   const refresh = async () => setAccounts(await listLocalAccounts());
 
@@ -237,19 +232,6 @@ function AccountManager({ current, language, onClose }: { current: LocalAccount;
       await updateLocalAccount(item.id, value => ({ ...value, active: action === "activate" }));
       await refresh(); setError("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not update account status."); }
-  };
-
-  const resetPassword = async (item: PublicAccount) => {
-    if (item.role === "admin") return;
-    if (!window.confirm(`${text.reset} for ${item.username}?`)) return;
-    const nextPassword = generateInitialPassword();
-    try {
-      const updated = await updateLocalAccount(item.id, value => value);
-      await saveAccountPassword(updated, nextPassword, true);
-      await refresh();
-      setCreatedCredentials({ username: updated.username, password: nextPassword });
-      setError("");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not reset password."); }
   };
 
   const rename = async (item: PublicAccount) => {
@@ -272,21 +254,6 @@ function AccountManager({ current, language, onClose }: { current: LocalAccount;
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not change bookshop name."); }
   };
 
-  const changeOwnPassword = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const oldPassword = String(form.get("current-password") ?? "");
-    const newPassword = String(form.get("new-password") ?? "");
-    if (newPassword !== String(form.get("confirm-password") ?? "")) { setOwnPasswordError("The new passwords do not match."); return; }
-    try {
-      const verified = await loginLocalAccount(current.username, oldPassword);
-      await saveAccountPassword(verified, newPassword);
-      setOwnPasswordError(""); setOwnPasswordNotice("Password changed.");
-      formElement.reset();
-    } catch (cause) { setOwnPasswordError(cause instanceof Error ? cause.message : "Could not change password."); }
-  };
-
   const exportAccounts = async () => {
     try {
       const backup = await backupAccountMetadata();
@@ -302,22 +269,10 @@ function AccountManager({ current, language, onClose }: { current: LocalAccount;
     <div className="account-manager-notice">{text.security}</div>
     <div className="account-manager-notice">{text.codeProvisioning}</div>
     {error && <div className="auth-error account-message" role="alert">{error}</div>}
-    {createdCredentials && <div className="account-credentials"><div><b>{createdCredentials.username}</b><p>{text.savedCredentials}</p><code>{createdCredentials.password}</code></div><button className="auth-close" onClick={() => setCreatedCredentials(null)} aria-label="Dismiss"><X size={17}/></button></div>}
-    <div className="account-manager-grid">
-      <section className="account-panel"><div className="account-panel-heading"><div className="auth-panel-icon"><KeyRound size={17}/></div><div><h2>{text.changeOwn}</h2><p>{current.username}</p></div></div>
-        <form className="account-form" onSubmit={changeOwnPassword}>
-          <label>{text.currentPassword}<input name="current-password" type="password" autoComplete="current-password" required/></label>
-          <label>{text.newPassword}<input name="new-password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required/></label>
-          <label>{text.confirmPassword}<input name="confirm-password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required/></label>
-          {ownPasswordError && <div className="auth-error">{ownPasswordError}</div>}{ownPasswordNotice && <div className="account-success">{ownPasswordNotice}</div>}
-          <button className="auth-submit">{text.change}<span>→</span></button>
-        </form>
-      </section>
-    </div>
     <section className="account-panel account-list-panel">
       <div className="account-list-heading"><div><h2>{text.accounts}</h2><p>{accounts.length} {language === "si" ? "ගිණුම්" : "accounts"}</p></div><label className="account-search"><Search size={16}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder={text.search}/></label></div>
       <div className="account-table-wrap"><table className="account-table"><thead><tr><th>{text.account}</th><th>{text.shopName}</th><th>{text.created}</th><th>{text.active}</th><th>{language === "si" ? "ක්‍රියා" : "Actions"}</th></tr></thead><tbody>
-        {filtered.map(item => <tr key={item.id}><td><strong>{item.username}</strong><small>{item.role === "admin" ? text.admin : item.ownerContact || text.bookshop}</small></td><td>{item.bookshopName}</td><td>{new Date(item.createdAt).toLocaleDateString(language === "si" ? "si-LK" : "en-GB")}</td><td><span className={`account-status ${item.active ? "is-active" : ""}`}>{item.active ? text.active : text.inactive}</span></td><td>{item.role === "shop" && <div className="account-row-actions"><button onClick={() => void rename(item)}>{text.changeUser}</button><button onClick={() => void renameShop(item)}>{text.shopName}</button><button onClick={() => void resetPassword(item)}>{text.reset}</button><button className={item.active ? "danger-action" : ""} onClick={() => void toggleActive(item)}>{item.active ? text.deactivate : text.activate}</button></div>}</td></tr>)}
+        {filtered.map(item => <tr key={item.id}><td><strong>{item.username}</strong><small>{item.role === "admin" ? text.admin : item.ownerContact || text.bookshop}</small></td><td>{item.bookshopName}</td><td>{new Date(item.createdAt).toLocaleDateString(language === "si" ? "si-LK" : "en-GB")}</td><td><span className={`account-status ${item.active ? "is-active" : ""}`}>{item.active ? text.active : text.inactive}</span></td><td>{item.role === "shop" && <div className="account-row-actions"><button onClick={() => void rename(item)}>{text.changeUser}</button><button onClick={() => void renameShop(item)}>{text.shopName}</button><button className={item.active ? "danger-action" : ""} onClick={() => void toggleActive(item)}>{item.active ? text.deactivate : text.activate}</button></div>}</td></tr>)}
         {!filtered.length && <tr><td colSpan={5} className="account-empty">{language === "si" ? "ගිණුම් හමු නොවීය." : "No accounts match your search."}</td></tr>}
       </tbody></table></div>
     </section>
