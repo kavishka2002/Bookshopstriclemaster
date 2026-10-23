@@ -5,13 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { LocalizedUi } from "@/components/app-language";
+import { getActiveTenantId } from "@/lib/database";
 import {
   coloringCategories, searchColoringSheets,
   type ColoringCategory, type ColoringSheet
 } from "@/lib/coloring-sheets";
 
-const SEARCH_HISTORY_KEY = "little-paper-colouring-searches";
-const RECENT_HISTORY_KEY = "little-paper-colouring-recent";
+const SEARCH_HISTORY_KEY = () => `little-paper-colouring-searches:${getActiveTenantId()}`;
+const RECENT_HISTORY_KEY = () => `little-paper-colouring-recent:${getActiveTenantId()}`;
 const MAX_HISTORY = 8;
 const PAGE_SIZE = 24;
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
@@ -120,8 +121,8 @@ export function ColoringSheetLibrary() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ColoringCategory | "All">("All");
   const [sortOrder, setSortOrder] = useState<"relevance" | "name">("relevance");
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => typeof window === "undefined" ? [] : readArray<string>(SEARCH_HISTORY_KEY));
-  const [recentSheets, setRecentSheets] = useState<RecentSheet[]>(() => typeof window === "undefined" ? [] : readArray<RecentSheet>(RECENT_HISTORY_KEY));
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => typeof window === "undefined" ? [] : readArray<string>(SEARCH_HISTORY_KEY()));
+  const [recentSheets, setRecentSheets] = useState<RecentSheet[]>(() => typeof window === "undefined" ? [] : readArray<RecentSheet>(RECENT_HISTORY_KEY()));
   const [selectedSheet, setSelectedSheet] = useState<ColoringSheet | null>(null);
   const [previewPage, setPreviewPage] = useState(1);
   const [previewPageCount, setPreviewPageCount] = useState(0);
@@ -157,7 +158,7 @@ export function ColoringSheetLibrary() {
   const rememberSheet = (sheet: ColoringSheet, printedAt?: number) => {
     const next = [{ id: sheet.id, ...(printedAt ? { printedAt } : {}) }, ...recentSheets.filter(item => item.id !== sheet.id)].slice(0, MAX_HISTORY);
     try {
-      localStorage.setItem(RECENT_HISTORY_KEY, JSON.stringify(next));
+      localStorage.setItem(RECENT_HISTORY_KEY(), JSON.stringify(next));
       setRecentSheets(next);
       setHistoryError("");
     } catch (cause) {
@@ -171,7 +172,7 @@ export function ColoringSheetLibrary() {
     if (!value) return;
     const next = [value, ...recentSearches.filter(item => item.toLocaleLowerCase() !== value.toLocaleLowerCase())].slice(0, MAX_HISTORY);
     try {
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(next));
+      localStorage.setItem(SEARCH_HISTORY_KEY(), JSON.stringify(next));
       setRecentSearches(next);
       setHistoryError("");
     } catch (cause) {
@@ -196,8 +197,8 @@ export function ColoringSheetLibrary() {
     setRecentSearches([]);
     setRecentSheets([]);
     try {
-      localStorage.removeItem(SEARCH_HISTORY_KEY);
-      localStorage.removeItem(RECENT_HISTORY_KEY);
+      localStorage.removeItem(SEARCH_HISTORY_KEY());
+      localStorage.removeItem(RECENT_HISTORY_KEY());
       setHistoryError("");
     } catch (cause) {
       console.error("Could not clear colouring sheet history.", cause);

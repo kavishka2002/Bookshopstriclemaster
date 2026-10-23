@@ -685,35 +685,40 @@ function localizedNode(node: ReactNode, language: AppLanguage): ReactNode {
   return cloneElement(element, props, children);
 }
 
-const LanguageContext = createContext<{ language: AppLanguage; toggle: () => void }>({
+const LanguageContext = createContext<{ language: AppLanguage; toggle: () => void; setScope: (scope: string) => void }>({
   language: "si",
-  toggle: () => undefined
+  toggle: () => undefined,
+  setScope: () => undefined
 });
 
 export function AppLanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<AppLanguage>("si");
+  const [scope, setScope] = useState("global");
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(LANGUAGE_KEY);
-      if (stored === "si" || stored === "en") window.setTimeout(() => setLanguage(stored), 0);
+      const scoped = localStorage.getItem(`${LANGUAGE_KEY}:${scope}`);
+      const stored = scoped ?? (scope === "global" ? localStorage.getItem(LANGUAGE_KEY) : "si");
+      window.setTimeout(() => setLanguage(stored === "en" ? "en" : "si"), 0);
     } catch (error) {
       console.error("Could not read the saved application language.", error);
     }
-  }, []);
+  }, [scope]);
 
   const value = useMemo(() => ({
     language,
+    setScope,
     toggle: () => {
       const next = language === "si" ? "en" : "si";
       try {
-        localStorage.setItem(LANGUAGE_KEY, next);
+        localStorage.setItem(`${LANGUAGE_KEY}:${scope}`, next);
+        if (scope === "global") localStorage.setItem(LANGUAGE_KEY, next);
         setLanguage(next);
       } catch (error) {
         console.error("Could not save the application language.", error);
         setLanguage(next);
       }
     }
-  }), [language]);
+  }), [language, scope]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 

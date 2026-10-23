@@ -1,6 +1,6 @@
 # Little Paper Sticker Studio
 
-A local-first Next.js app for creating Sri Lankan school name stickers and notebook cover labels. Design data, templates, and uploaded images stay in the current browser profile; no account or cloud service is required.
+A local-first Next.js app for creating Sri Lankan school name stickers and notebook cover labels. Sign-in accounts and each bookshop's designs, templates, and uploaded images stay in separate local browser storage; no cloud service is used.
 
 ## Start on Windows
 
@@ -20,6 +20,39 @@ npm run lint
 npm run build
 npm start
 ```
+
+## Offline bookshop accounts
+
+The first run creates a local administrator account with username `P321` and demo password `1234`. These are demo-only credentials. The administrator must replace the demo password at the first sign-in; use a unique password of at least 10 characters. The password is not displayed on the login screen and is stored as a salted PBKDF2-SHA-256 hash in a separate IndexedDB database.
+
+New customer accounts are provisioned **only in source code**; the application has no account-creation or account-import action. To add one:
+
+1. Run `node scripts/generate-local-account-seed.mjs` in a terminal. Enter a unique account ID, username, shop name, optional owner/contact label, and an initial password (password input is hidden).
+2. Copy the generated JSON record into `provisionedAccountSeeds` in [`src/data/local-account-seeds.ts`](./src/data/local-account-seeds.ts). The record contains a salted PBKDF2-SHA-256 hash and salt, not the plaintext password. Never commit or share the password.
+3. Build and deploy the app. When it next initializes, it adds new seed IDs without overwriting existing local accounts; duplicate IDs/usernames or invalid hashes stop initialization with an error. Give the initial password to the customer securely; the customer must change it at first sign-in.
+
+The seed format is:
+
+```ts
+{
+  id: "shop-322",
+  username: "P322",
+  shopName: "Example Bookshop",
+  ownerContact: "",
+  passwordHash: "<32-byte PBKDF2-SHA-256-310000 hash, base64>",
+  salt: "<16-byte random salt, base64>",
+  active: true,
+  createdAt: 1735689600000
+}
+```
+
+After signing in, an administrator can open **Account management** to view locally known accounts, change shop names/usernames, reset passwords, activate or deactivate accounts, change the administrator password, and export account metadata. Exported JSON contains salted password hashes (never plaintext passwords), so treat it as sensitive. It is a backup/report only; the app does not import it or create accounts from it. Reset passwords are displayed once in the management screen; provide them to the customer securely.
+
+Each account gets its own IndexedDB workspace for sticker designs, templates, assets, print orders, CV drafts, and saved past papers. On the first administrator sign-in, existing workspace records are copied to the administrator's new workspace; the original database is left in place. Existing local recent lists and preferences are copied as well. New bookshop accounts start with empty workspaces. Account data is specific to the browser profile and does not synchronize to other devices.
+
+The production app registers a service worker that caches the app shell and loaded application assets for offline reopening after the first online load. Account setup, sign-in, password changes, and locally saved work continue offline after the app has loaded and initialized. Use the production build over HTTPS (or localhost) to install the PWA; the development server does not register the service worker. Online source searches and uncached remote content still require internet access.
+
+This is browser-local authentication, not a server security boundary. Someone with full access to the computer, browser profile, or developer tools can alter local storage or bypass the UI. The demo account and local password hashes do not provide commercial licensing, centralized identity, cross-device synchronization, or secure recovery. Those require a trusted backend and should be designed separately before commercial deployment.
 
 ## Language and dialogs
 

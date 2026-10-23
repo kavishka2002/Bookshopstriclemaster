@@ -12,7 +12,7 @@ import { customArtworkAssets, customArtworkTemplateIds, customArtworkTemplates }
 import { printableLabelCategories, printableLabelCategoryById, printableLabelTemplateIds, printableLabelTemplates, type PrintableLabelCategory } from "@/data/printable-label-templates";
 import { CUSTOM_SIZE_ARTWORK_ID, CUSTOM_SIZE_TEMPLATE_ID, customSizeTemplate } from "@/data/custom-size-template";
 import { createDesign, createSubjectDesign, templateFromDesign } from "@/lib/design";
-import { db, readRecentIds, writeRecentIds } from "@/lib/database";
+import { db, getActiveTenantId, readRecentIds, writeRecentIds } from "@/lib/database";
 import { isSupportedCustomSize, measurementToMillimeters, millimetersToMeasurement } from "@/lib/custom-size";
 import { calculateSheetLayout } from "@/lib/layout";
 import { createPrintSticker, getPrintStickerCount, getPrintSubjectIndex, getPrintSubjects } from "@/lib/printing";
@@ -25,7 +25,7 @@ import { CustomPrintStudio } from "@/components/custom-print-studio";
 import { PastPaperFinder } from "@/components/past-paper-finder";
 import { ColoringSheetLibrary } from "@/components/coloring-sheet-library";
 import { CvBuilder } from "@/components/cv-builder";
-import { AppLanguageProvider, LanguageToggle, LocalizedUi } from "@/components/app-language";
+import { LanguageToggle, LocalizedUi } from "@/components/app-language";
 import { AppToast } from "@/components/app-toast";
 import { useAppDialog } from "@/components/app-dialog";
 import type { AssetCategory, DesignImage, EnglishFontFamily, ImageAsset, LanguageMode, MeasurementUnit, SinhalaFontFamily, StickerDesign, StickerTemplate, TextElement, TextInputMode } from "@/types";
@@ -257,9 +257,9 @@ export function StickerStudio() {
   }, []);
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("little-paper-language");
+      const stored = localStorage.getItem(`little-paper-language:${getActiveTenantId()}`);
       if (stored === "English" || stored === "Sinhala" || stored === "Sinhala + English") setLanguage(stored);
-      const storedTypingMode = localStorage.getItem("little-paper-typing-mode");
+      const storedTypingMode = localStorage.getItem(`little-paper-typing-mode:${getActiveTenantId()}`);
       if (storedTypingMode === "English" || storedTypingMode === "Sinhala Keyboard" || storedTypingMode === "Singlish to Sinhala") {
         setTypingMode(storedTypingMode);
       }
@@ -271,12 +271,12 @@ export function StickerStudio() {
   }, []);
   useEffect(() => {
     if (!preferencesLoaded.current) return;
-    try { localStorage.setItem("little-paper-language", language); }
+    try { localStorage.setItem(`little-paper-language:${getActiveTenantId()}`, language); }
     catch (e) { setError(e instanceof Error ? e.message : "Could not save the language preference."); }
   }, [language]);
   useEffect(() => {
     if (!preferencesLoaded.current) return;
-    try { localStorage.setItem("little-paper-typing-mode", typingMode); }
+    try { localStorage.setItem(`little-paper-typing-mode:${getActiveTenantId()}`, typingMode); }
     catch (e) { setError(e instanceof Error ? e.message : "Could not save the text input mode."); }
   }, [typingMode]);
   useEffect(() => {
@@ -637,7 +637,7 @@ export function StickerStudio() {
       setDesigns(prev => prev.filter(d => d.id !== item.id));
       setRecentIds(prev => {
         const next = prev.filter(id => id !== item.id);
-        localStorage.setItem("little-paper-recent-ids", JSON.stringify(next));
+        localStorage.setItem(`little-paper-recent-ids:${getActiveTenantId()}`, JSON.stringify(next));
         return next;
       });
       if (design?.id === item.id) setDesign(null);
@@ -1142,7 +1142,7 @@ export function StickerStudio() {
     return <div className="empty-large"><div className="empty-illustration"><Printer size={28}/></div><h3>{title}</h3><p>{text}</p><button className="primary-button mt-4" onClick={action}><ArrowLeft size={14}/> Go back</button></div>;
   }
 
-  return <AppLanguageProvider><LocalizedUi><div className="studio-shell">
+  return <LocalizedUi><div className="studio-shell">
     <aside className={`sidebar no-print ${isMobileNavOpen ? "mobile-open" : ""}`}><div className="brand"><div className="brand-mark"><span>✿</span></div><div><b>little paper</b><small>STICKER STUDIO</small></div><button className="mobile-close" onClick={() => setMobileNavOpen(false)}><X size={18}/></button></div>
       <nav className="sidebar-nav" aria-label="Main navigation">{navGroups.map(group => <div className="nav-group" key={group.label}><div className="sidebar-label">{group.label}</div>{group.items.map(({ title, icon: Icon }) => <button key={title} className={`nav-item ${section === title ? "active" : ""}`} aria-current={section === title ? "page" : undefined} onClick={() => changeSection(title)}><Icon size={17} strokeWidth={1.8}/><span>{title}</span>{title === "Recent designs" && sortedRecent.length > 0 && <small>{sortedRecent.length}</small>}</button>)}</div>)}</nav>
       <div className="sidebar-bottom"><div className="offline-badge"><span/> Works offline on this device</div><div className="profile-card"><div className="profile-avatar">L</div><div><b>Local workspace</b><small>Just for your bookshop</small></div><Settings size={15}/></div><div className="version">Little Paper Studio · 1.0</div></div>
@@ -1155,7 +1155,7 @@ export function StickerStudio() {
         {message && <AppToast key={`success-${message}`} variant="success" message={message} onClose={() => setMessage("")}/>}
       </div>
     </main>
-  </div>{dialogHost}</LocalizedUi></AppLanguageProvider>;
+  </div>{dialogHost}</LocalizedUi>;
 }
 
 function PrintSheet({

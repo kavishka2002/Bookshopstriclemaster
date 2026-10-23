@@ -6,11 +6,16 @@ import type { CvDraft } from "./cv";
 const DB_NAME = "little-paper-studio";
 const DB_VERSION = 5;
 type StoreName = "designs" | "templates" | "assets" | "subjects" | "customPrintDesigns" | "pastPapers" | "cvDrafts";
+let activeTenantId = "legacy";
 
-function openDatabase(): Promise<IDBDatabase> {
+function databaseName(tenantId = activeTenantId): string {
+  return tenantId === "legacy" ? DB_NAME : `${DB_NAME}-tenant-${tenantId}`;
+}
+
+function openDatabase(name = databaseName()): Promise<IDBDatabase> {
   if (typeof indexedDB === "undefined") return Promise.reject(new Error("Local browser storage is unavailable."));
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = indexedDB.open(name, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains("designs")) db.createObjectStore("designs", { keyPath: "id" });
@@ -24,6 +29,94 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("Could not open local design storage."));
   });
+}
+
+async function copyLegacyDatabase(target: IDBDatabase): Promise<void> {
+  const legacy = await openDatabase(DB_NAME);
+  const stores: StoreName[] = ["designs", "templates", "assets", "subjects", "customPrintDesigns", "pastPapers", "cvDrafts"];
+  await new Promise<void>((resolve, reject) => {
+    const names = stores.filter(name => legacy.objectStoreNames.contains(name));
+    if (!names.length) {
+      legacy.close();
+      resolve();
+      return;
+    }
+    const read = legacy.transaction(names, "readonly");
+    const pending: Array<{ store: StoreName; values: unknown[] }> = [];
+    let remaining = names.length;
+    for (const store of names) {
+      const request = read.objectStore(store).getAll();
+      request.onsuccess = () => {
+        pending.push({ store, values: request.result });
+        remaining -= 1;
+        if (remaining !== 0) return;
+        try {
+          const write = target.transaction(names, "readwrite");
+          for (const batch of pending) {
+            const destination = write.objectStore(batch.store);
+            for (const value of batch.values) destination.put(value);
+          }
+          write.oncomplete = () => {
+            legacy.close();
+            resolve();
+          };
+          write.onerror = () => {
+            legacy.close();
+            reject(write.error ?? new Error("Could not migrate existing local bookshop data."));
+          };
+          write.onabort = () => {
+            legacy.close();
+            reject(write.error ?? new Error("Could not migrate existing local bookshop data."));
+          };
+        } catch (error) {
+          legacy.close();
+          reject(error);
+        }
+      };
+      request.onerror = () => {
+        legacy.close();
+        reject(request.error ?? new Error(`Could not read existing ${store} data.`));
+      };
+    }
+    read.onerror = () => {
+      legacy.close();
+      reject(read.error ?? new Error("Could not read existing local bookshop data."));
+    };
+  });
+}
+
+export async function activateTenant(tenantId: string, migrateLegacy = false): Promise<void> {
+  if (!/^[a-zA-Z0-9-]{1,80}$/.test(tenantId)) throw new Error("Invalid local account identifier.");
+  const previous = activeTenantId;
+  activeTenantId = tenantId;
+  try {
+    const database = await openDatabase();
+    if (migrateLegacy) {
+      await copyLegacyDatabase(database);
+      const legacyPreferences = [
+        "little-paper-language", "little-paper-typing-mode", "little-paper-recent-ids",
+        "little-paper-custom-print-recents", "little-paper-colouring-searches", "little-paper-colouring-recent"
+      ];
+      for (const key of legacyPreferences) {
+        try {
+          const value = localStorage.getItem(key);
+          if (value !== null && localStorage.getItem(`${key}:${tenantId}`) === null) {
+            localStorage.setItem(`${key}:${tenantId}`, value);
+          }
+        } catch (error) {
+          console.error(`Could not migrate the local preference ${key}.`, error);
+        }
+      }
+    }
+    database.close();
+  } catch (error) {
+    activeTenantId = previous;
+    throw error;
+  }
+}
+
+export function getActiveTenantId(): string {
+  return activeTenantId;
 }
 
 async function request<T>(storeName: StoreName, mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
@@ -78,9 +171,10 @@ export const db = {
 };
 
 const RECENTS_KEY = "little-paper-recent-ids";
+const recentKey = () => `${RECENTS_KEY}:${activeTenantId}`;
 export function readRecentIds(): string[] {
   try {
-    const raw = localStorage.getItem(RECENTS_KEY);
+    const raw = localStorage.getItem(recentKey());
     const value: unknown = raw ? JSON.parse(raw) : [];
     return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string").slice(0, 10) : [];
   } catch (error) {
@@ -92,7 +186,7 @@ export function readRecentIds(): string[] {
 export function writeRecentIds(id: string): void {
   try {
     const recent = [id, ...readRecentIds().filter(existing => existing !== id)].slice(0, 10);
-    localStorage.setItem(RECENTS_KEY, JSON.stringify(recent));
+    localStorage.setItem(recentKey(), JSON.stringify(recent));
   } catch (error) {
     console.error("Could not update recent designs.", error);
     throw new Error("The design was saved, but the recent list could not be updated.");

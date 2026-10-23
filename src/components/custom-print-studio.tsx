@@ -7,7 +7,7 @@ import {
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { ImageAsset } from "@/types";
-import { db } from "@/lib/database";
+import { db, getActiveTenantId } from "@/lib/database";
 import { LocalizedUi } from "@/components/app-language";
 import { AppToast } from "@/components/app-toast";
 import { useAppDialog } from "@/components/app-dialog";
@@ -68,7 +68,7 @@ const getDefaultDesign = (): CustomPrintDesign => ({
 
 function recentCustomIds(): string[] {
   try {
-    const stored = localStorage.getItem("little-paper-custom-print-recents");
+    const stored = localStorage.getItem(`little-paper-custom-print-recents:${getActiveTenantId()}`);
     const value: unknown = stored ? JSON.parse(stored) : [];
     return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string").slice(0, 10) : [];
   } catch (error) {
@@ -80,7 +80,7 @@ function recentCustomIds(): string[] {
 function rememberCustomId(id: string): void {
   try {
     const next = [id, ...recentCustomIds().filter(previous => previous !== id)].slice(0, 10);
-    localStorage.setItem("little-paper-custom-print-recents", JSON.stringify(next));
+    localStorage.setItem(`little-paper-custom-print-recents:${getActiveTenantId()}`, JSON.stringify(next));
   } catch (error) {
     console.error("Could not update recent custom print designs.", error);
     throw new Error("The design was saved, but the recent custom print list could not be updated.");
@@ -517,7 +517,7 @@ export function CustomPrintStudio({
       await db.deleteCustomPrintDesign(saved.id);
       setSavedDesigns(previous => previous.filter(item => item.id !== saved.id));
       const nextRecent = recentCustomIds().filter(id => id !== saved.id);
-      localStorage.setItem("little-paper-custom-print-recents", JSON.stringify(nextRecent));
+      localStorage.setItem(`little-paper-custom-print-recents:${getActiveTenantId()}`, JSON.stringify(nextRecent));
       setRecentIds(nextRecent);
       if (design.id === saved.id) setDesign(getDefaultDesign());
       setMessage("Saved custom print design deleted.");
