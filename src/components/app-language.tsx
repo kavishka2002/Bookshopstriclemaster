@@ -4,10 +4,13 @@ import React, {
   Children, cloneElement, createContext, isValidElement, useContext, useEffect, useMemo, useState,
   type ReactNode
 } from "react";
+import { Moon, Sun } from "lucide-react";
 
 export type AppLanguage = "si" | "en";
+export type AppTheme = "light" | "dark";
 
 const LANGUAGE_KEY = "little-paper-language";
+const THEME_KEY = "little-paper-theme";
 
 const si: Record<string, string> = {
   Home: "මුල් පිටුව",
@@ -25,6 +28,10 @@ const si: Record<string, string> = {
   "A4 print studio": "A4 මුද්‍රණ මැදිරිය",
   "Custom Print Studio": "අභිරුචි මුද්‍රණ මැදිරිය",
   Settings: "සැකසුම්",
+  Appearance: "පෙනුම",
+  "Choose a light or dark workspace theme. Your choice is saved for this bookshop on this device.": "ආලෝක හෝ අඳුරු තේමාවක් තෝරන්න. තේරීම මෙම උපාංගයේ ඔබගේ පොත්හල සඳහා සුරැකේ.",
+  Light: "ආලෝක",
+  Dark: "අඳුරු",
   "Your bookshop": "ඔබගේ පොත්හල",
   "Everything stays on this device": "සියල්ල මෙම උපාංගයේම සුරැකේ",
   "New design": "නව නිර්මාණය",
@@ -685,14 +692,23 @@ function localizedNode(node: ReactNode, language: AppLanguage): ReactNode {
   return cloneElement(element, props, children);
 }
 
-const LanguageContext = createContext<{ language: AppLanguage; toggle: () => void; setScope: (scope: string) => void }>({
+const LanguageContext = createContext<{
+  language: AppLanguage;
+  theme: AppTheme;
+  toggle: () => void;
+  toggleTheme: () => void;
+  setScope: (scope: string) => void;
+}>({
   language: "si",
+  theme: "light",
   toggle: () => undefined,
+  toggleTheme: () => undefined,
   setScope: () => undefined
 });
 
 export function AppLanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<AppLanguage>("si");
+  const [theme, setTheme] = useState<AppTheme>("light");
   const [scope, setScope] = useState("global");
   useEffect(() => {
     try {
@@ -704,9 +720,34 @@ export function AppLanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [scope]);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`${THEME_KEY}:${scope}`) ??
+        (scope === "global" ? null : localStorage.getItem(`${THEME_KEY}:global`));
+      window.setTimeout(() => setTheme(stored === "dark" ? "dark" : "light"), 0);
+    } catch (error) {
+      console.error("Could not read the saved application theme.", error);
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   const value = useMemo(() => ({
     language,
+    theme,
     setScope,
+    toggleTheme: () => {
+      const next = theme === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem(`${THEME_KEY}:${scope}`, next);
+        setTheme(next);
+      } catch (error) {
+        console.error("Could not save the application theme.", error);
+        setTheme(next);
+      }
+    },
     toggle: () => {
       const next = language === "si" ? "en" : "si";
       try {
@@ -718,7 +759,7 @@ export function AppLanguageProvider({ children }: { children: ReactNode }) {
         setLanguage(next);
       }
     }
-  }), [language, scope]);
+  }), [language, scope, theme]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
@@ -731,6 +772,17 @@ export function LanguageToggle() {
   return <button type="button" className="language-toggle" aria-label={language === "si" ? "Switch to English" : "සිංහලට මාරු වන්න"} onClick={toggle}>
     <span>සි</span>
     <span>{language === "si" ? "සිංහල" : "English"}</span>
+  </button>;
+}
+
+export function ThemeToggle() {
+  const { language, theme, toggleTheme } = useAppLanguage();
+  const nextMode = theme === "dark"
+    ? (language === "si" ? "ආලෝක තේමාවට මාරු වන්න" : "Switch to light mode")
+    : (language === "si" ? "අඳුරු තේමාවට මාරු වන්න" : "Switch to dark mode");
+  return <button type="button" className="theme-toggle" aria-label={nextMode} title={nextMode} onClick={toggleTheme}>
+    {theme === "dark" ? <Sun size={16}/> : <Moon size={16}/>}
+    <span>{theme === "dark" ? (language === "si" ? "අඳුරු" : "Dark") : (language === "si" ? "ආලෝක" : "Light")}</span>
   </button>;
 }
 

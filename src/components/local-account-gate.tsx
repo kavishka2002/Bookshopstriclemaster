@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
-import { BookOpen, Download, Eye, EyeOff, KeyRound, LogOut, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
-import { AppLanguageProvider, LanguageToggle, useAppLanguage } from "@/components/app-language";
+import { BookOpen, Download, Eye, EyeOff, Info, KeyRound, LogOut, Mail, Phone, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
+import { AppLanguageProvider, LanguageToggle, ThemeToggle, useAppLanguage } from "@/components/app-language";
 import {
   backupAccountMetadata, changeLocalShopName, changeLocalUsername, initializeLocalAccounts,
   isLegacyDataMigrated, listLocalAccounts, loginLocalAccount, markLegacyDataMigrated, saveAccountPassword,
@@ -14,7 +14,7 @@ const messages = {
   si: {
     welcome: "ඔබගේ පොත්හල වැඩබිමට සාදරයෙන් පිළිගනිමු", intro: "ඔබගේ නිර්මාණ සහ මුද්‍රණ කටයුතු එකම තැනකින් කළමනාකරණය කරන්න.",
     username: "පරිශීලක නාමය", password: "මුරපදය", remember: "පරිශීලක නාමය මතක තබාගන්න", login: "ඇතුළු වන්න",
-    offline: "අන්තර්ජාලය නොමැතිව ක්‍රියා කරයි", online: "මාර්ගගතයි", loading: "ගිණුම් සකසමින්…", demo: "Demo P321 ගිණුම පළමු වරට password එක වෙනස් කළ යුතුයි. Provision කළ ගිණුමට දුන් password එකෙන් පිවිසෙන්න.",
+    offline: "අන්තර්ජාලය නොමැතිව ක්‍රියා කරයි", online: "මාර්ගගතයි", loading: "ගිණුම් සකසමින්…", demo: "ඔබගේ පරිශීලක නාමය සහ මුරපදය කිසිවෙකු සමඟ බෙදා නොගන්න. බෙදාගැනීමක් හෝ අනිසි භාවිතයක් නිසා ගිණුම අක්‍රිය කළ හැක. නව යාවත්කාලීන ඉක්මනින් ලබාදෙමු.",
     initialPassword: "මුල් පිවිසුම සඳහා නව මුරපදයක් තෝරන්න", newPassword: "නව මුරපදය", confirmPassword: "නව මුරපදය තහවුරු කරන්න",
     updatePassword: "මුරපදය යාවත්කාලීන කරන්න", error: "පිවිසීමට නොහැකි විය", bookshop: "පොත්හල", manager: "ගිණුම් කළමනාකරණය",
     back: "වැඩබිමට ආපසු", logout: "ඉවත් වන්න", account: "ගිණුම",
@@ -30,7 +30,7 @@ const messages = {
   en: {
     welcome: "Welcome to your bookshop workspace", intro: "Manage your designs and print work from one calm, focused place.",
     username: "Username", password: "Password", remember: "Remember username", login: "Sign in",
-    offline: "Working offline", online: "Online", loading: "Preparing local accounts…", demo: "Demo P321 requires a one-time password update. Sign in to provisioned accounts with the assigned password.",
+    offline: "Working offline", online: "Online", loading: "Preparing local accounts…", demo: "Keep your username and password private. Sharing credentials or misuse may result in account deactivation. New updates are coming soon.",
     initialPassword: "Choose a new password to continue", newPassword: "New password", confirmPassword: "Confirm new password",
     updatePassword: "Update password", error: "Unable to sign in", bookshop: "Bookshop", manager: "Account management",
     back: "Back to workspace", logout: "Sign out", account: "Account",
@@ -82,6 +82,7 @@ function GateContent({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
@@ -107,6 +108,15 @@ function GateContent({ children }: { children: ReactNode }) {
     }, Math.max(0, sessionExpiry - Date.now()));
     return () => window.clearTimeout(timeout);
   }, [account, sessionExpiry]);
+
+  useEffect(() => {
+    if (!showAbout) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowAbout(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [showAbout]);
 
   const finishLogin = async (loggedIn: LocalAccount) => {
     const migrateLegacy = loggedIn.role === "admin" && !(await isLegacyDataMigrated());
@@ -181,17 +191,51 @@ function GateContent({ children }: { children: ReactNode }) {
         <label>{text.password}<span className="auth-input-wrap"><KeyRound size={17}/><input autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••"/><button type="button" className="auth-eye" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></span></label>
         <label className="auth-remember"><input type="checkbox" checked={remember} onChange={event => setRemember(event.target.checked)}/>{text.remember}</label>
         {error && <div className="auth-error" role="alert">{text.error}: {localizedAuthError(error, language)}</div>}
-        <button className="auth-submit" type="submit" disabled={busy || !username.trim() || !password}>{busy ? <><RefreshCw className="auth-spin" size={17}/>{language === "si" ? "පිවිසෙමින්…" : "Signing in…"}</> : <>{text.login}<span>→</span></>}</button>
+        <button className="auth-submit" type="submit" disabled={busy || !username.trim() || !password} aria-label={busy ? (language === "si" ? "පිවිසෙමින්" : "Signing in") : text.login}>
+          {busy ? <><RefreshCw className="auth-spin" size={17}/><span className="auth-submit-label">{language === "si" ? "පිවිසෙමින්…" : "Signing in…"}</span></> : <><span className="auth-submit-label">{text.login}</span><span className="auth-submit-arrow" aria-hidden="true">→</span></>}
+        </button>
       </form>
-      <div className="auth-foot"><span className={`auth-online-dot ${online ? "" : "offline"}`}>{online ? <Wifi size={13}/> : <WifiOff size={13}/>} {online ? text.online : text.offline}</span><LanguageToggle/></div>
+      <div className="auth-foot">
+        <span className={`auth-online-dot ${online ? "" : "offline"}`}>{online ? <Wifi size={13}/> : <WifiOff size={13}/>} {online ? text.online : text.offline}</span>
+        <button className="auth-about-link" type="button" onClick={() => setShowAbout(true)}><Info size={14}/>{language === "si" ? "මා ගැන" : "About me"}</button>
+        <ThemeToggle/>
+        <LanguageToggle/>
+      </div>
       <p className="auth-demo-note">{text.demo}</p>
     </section>
     <div className="auth-side-note"><div className="auth-side-mark"><Store size={22}/></div><span>{language === "si" ? "ඔබගේ නිර්මාණ. ඔබගේ පොත්හල. ඔබගේ උපාංගයේම." : "Your craft. Your bookshop. Right here on this device."}</span></div>
+    {showAbout && <div className="auth-about-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setShowAbout(false); }}>
+      <section className="auth-about-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-about-title">
+        <button className="auth-about-close" type="button" onClick={() => setShowAbout(false)} aria-label={language === "si" ? "වසන්න" : "Close"}><X size={18}/></button>
+        <div className="auth-about-avatar"><BookOpen size={24}/></div>
+        <span className="auth-eyebrow">{language === "si" ? "සංවර්ධකයා" : "DEVELOPER"}</span>
+        <h2 id="auth-about-title">{language === "si" ? "මා ගැන" : "About me"}</h2>
+        <p className="auth-about-name">M.L Kavishka Sandaruwan</p>
+        <div className="auth-about-contacts">
+          <a href="tel:0767660922"><Phone size={16}/>0767660922</a>
+          <a href="mailto:kavishkasandaruwan68@gmail.com"><Mail size={16}/>kavishkasandaruwan68@gmail.com</a>
+        </div>
+        <p className="auth-about-caption">{language === "si" ? "Little Paper Bookshop Studio හි නිර්මාතෘ සහ සංවර්ධක." : "Creator and developer of Little Paper Bookshop Studio."}</p>
+      </section>
+    </div>}
   </main>;
 
   return <div className="auth-app-shell">
     <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><BookOpen size={16}/></div><span>Little Paper</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
-    {showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}
+    <div className="auth-app-content">{showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}</div>
+    <footer className="workspace-footer no-print">
+      <div className="workspace-footer-brand">
+        <strong>Little Paper Bookshop Studio</strong>
+        <span>{language === "si" ? "නිර්මාණය සහ සංවර්ධනය" : "Created and developed by"}</span>
+        <b className="workspace-footer-developer">M.L Kavishka Sandaruwan</b>
+      </div>
+      <div className="workspace-footer-contact"><a href="tel:0767660922"><Phone size={14}/>0767660922</a><a href="mailto:kavishkasandaruwan68@gmail.com"><Mail size={14}/>kavishkasandaruwan68@gmail.com</a></div>
+      <div className="workspace-footer-terms">
+        <span>{language === "si" ? "ගිණුම් විස්තර ආරක්ෂිතව තබාගන්න. පරිශීලක නාමය හෝ මුරපදය බෙදා නොගන්න." : "Keep account details private. Do not share your username or password."}</span>
+        <span>{language === "si" ? "බෙදාගැනීමක් හෝ අනිසි භාවිතයක් වාර්තා වුවහොත් ගිණුම අක්‍රිය කළ හැක." : "Accounts may be disabled if credential sharing or misuse is reported."}</span>
+        <span>{language === "si" ? "නව යාවත්කාලීන ඉක්මනින් ලබාදෙමු." : "New updates are coming soon."}</span>
+      </div>
+    </footer>
   </div>;
 }
 
@@ -206,7 +250,7 @@ function PasswordChangeRequired({ account, text, error, busy, onSubmit, onLangua
       <label>{text.newPassword}<input className="auth-plain-input" name="new-password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required/></label>
       <label>{text.confirmPassword}<input className="auth-plain-input" name="confirm-password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required/></label>
       {error && <div className="auth-error" role="alert">{error}</div>}
-      <button className="auth-submit" disabled={busy}>{busy ? "…" : text.updatePassword}<span>→</span></button>
+      <button className="auth-submit" disabled={busy}><span className="auth-submit-label">{busy ? "…" : text.updatePassword}</span><span className="auth-submit-arrow" aria-hidden="true">→</span></button>
     </form>
     <div className="auth-foot">{onLanguageToggle}</div>
   </section></main>;

@@ -58,7 +58,7 @@ This is browser-local authentication, not a server security boundary. Someone wi
 
 ## Language and dialogs
 
-The app starts in Sinhala. Use the language control in the top bar to switch between Sinhala and English; the choice is saved in this browser and remains selected after reloading. The shared interface translations cover navigation, common actions, sticker editing and print controls, and the main colouring and past-paper library workflows. User-created text, saved filenames, source metadata, and some detailed technical guidance remain unchanged.
+The app starts in Sinhala. Use the language control in the top bar to switch between Sinhala and English; the choice is saved in this browser and remains selected after reloading. Use the theme control in the login screen, top bar, or Settings to switch between light and dark mode; the preference is saved per bookshop in this browser. The shared interface translations cover navigation, common actions, sticker editing and print controls, and the main colouring and past-paper library workflows. User-created text, saved filenames, source metadata, and some detailed technical guidance remain unchanged.
 
 Rename, delete, and clear-order actions use an in-app accessible dialog rather than the browser's plain prompt/confirmation pop-up. Cancel or Escape leaves the saved item or print order unchanged.
 
