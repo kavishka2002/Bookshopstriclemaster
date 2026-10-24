@@ -5,7 +5,7 @@ import Image from "next/image";
 import { BookOpen, Download, Eye, EyeOff, Info, KeyRound, LogOut, Mail, Phone, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
 import { AppLanguageProvider, LanguageToggle, ThemeToggle, useAppLanguage } from "@/components/app-language";
 import { WelcomePopup, WhatsAppContact } from "@/components/bookshop-contact-widgets";
-import { TrialAccessBoundary } from "@/components/trial-access";
+import { TrialAccessBoundary, TrialNotice } from "@/components/trial-access";
 import {
   backupAccountMetadata, changeLocalShopName, changeLocalUsername, initializeLocalAccounts,
   isLegacyDataMigrated, listLocalAccounts, loginLocalAccount, markLegacyDataMigrated, saveAccountPassword,
@@ -229,9 +229,10 @@ function GateContent({ children }: { children: ReactNode }) {
   </main>;
 
   return <TrialAccessBoundary enabled={Boolean(account.isTrial)}><div className="auth-app-shell">
-    <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><Image src="/bookshop-icon.svg" width={29} height={29} alt="" aria-hidden="true"/></div><span>PaperBloom</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
+    <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><Image src="/bookshop-icon.svg" width={29} height={29} alt="" aria-hidden="true"/></div><span>PaperBloom</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" data-trial-allow onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" data-trial-allow onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
+    {account.isTrial && <TrialNotice/>}
     <div className="auth-app-content">{showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}</div>
-    <WelcomePopup open={showWelcome} userName={account.username} onClose={() => setShowWelcome(false)}/>
+    <WelcomePopup open={showWelcome} userName={account.username} isTrial={Boolean(account.isTrial)} onClose={() => setShowWelcome(false)}/>
     <WhatsAppContact hidden={showWelcome}/>
     <footer className="workspace-footer no-print">
       <div className="workspace-footer-brand">

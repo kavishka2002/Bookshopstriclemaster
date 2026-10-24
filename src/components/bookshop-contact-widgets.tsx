@@ -55,7 +55,7 @@ function useDialogAccessibility(open: boolean, onClose: () => void, dialogRef: R
   }, [dialogRef, onClose, open]);
 }
 
-export function WelcomePopup({ open, userName, onClose }: { open: boolean; userName: string; onClose: () => void }) {
+export function WelcomePopup({ open, userName, isTrial = false, onClose }: { open: boolean; userName: string; isTrial?: boolean; onClose: () => void }) {
   const dialogRef = useRef<HTMLElement>(null);
   useDialogAccessibility(open, onClose, dialogRef);
   if (!open) return null;
@@ -63,50 +63,78 @@ export function WelcomePopup({ open, userName, onClose }: { open: boolean; userN
   return <div className="bookshop-modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialogRef} className="bookshop-welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="bookshop-welcome-title" aria-describedby="bookshop-welcome-message">
       <div className="bookshop-welcome-scroll">
-        <button className="bookshop-modal-close" type="button" aria-label="පිළිගැනීමේ තොරතුරු වසන්න" onClick={onClose}><X size={18}/></button>
+        <button className="bookshop-modal-close" type="button" data-trial-allow aria-label="පිළිගැනීමේ තොරතුරු වසන්න" onClick={onClose}><X size={18}/></button>
         <div className="bookshop-welcome-art" aria-hidden="true">
           <span className="bookshop-welcome-book"><Image src="/bookshop-icon.svg" width={54} height={54} alt=""/></span>
           <span className="bookshop-welcome-sparkle"><Sparkles size={18}/></span>
         </div>
         <p className="bookshop-dialog-eyebrow">PAPERBLOOM STATIONERY · CREATIVE STUDIO</p>
-        <h2 id="bookshop-welcome-title">අපගේ Bookshop Application එකට සාදරයෙන් පිළිගනිමු! 🎉</h2>
-        <p className="bookshop-welcome-user">ආයුබෝවන්, {userName}.</p>
-        <p id="bookshop-welcome-message" className="bookshop-welcome-message">ඔබේ වැඩ පහසු කරන, කාලය ඉතිරි කරන නවීන ඩිජිටල් සහායකයෙක්.</p>
+        {isTrial ? <>
+          <h2 id="bookshop-welcome-title">නොමිලේ අත්හදා බැලීමේ අවස්ථාවක්! 🎉</h2>
+          <p className="bookshop-welcome-user">ආයුබෝවන්, {userName}.</p>
+          <div id="bookshop-welcome-message" className="trial-promotion">
+            <section lang="si">
+              <h3>සිංහල 🇱🇰</h3>
+              <p>👀 නොමිලේ ලබාගත හැක්කේ යෙදුමේ පහසුකම් නැරඹීම සඳහා පමණි.</p>
+              <p className="trial-promotion-highlight">✨ සම්පූර්ණ ප්‍රවේශය ලබාගැනීමට අදම ලියාපදිංචි වන්න!</p>
+              <p>💰 සාමාන්‍ය මිල: රු. 3,499<br/><strong>🔥 විශේෂ හඳුන්වාදීමේ මිල: රු. 2,499 පමණයි!</strong></p>
+              <p>📞 වැඩි විස්තර සඳහා අමතන්න හෝ WhatsApp කරන්න:</p>
+              <a className="trial-promotion-number" href={bookshopWelcomeInfo.phoneHref}>076 766 0922</a>
+              <p>ඔබේ සියලු නිර්මාණ කටයුතු එකම ස්ථානයකින් පහසුවෙන් කරගන්න!</p>
+            </section>
+            <section lang="en">
+              <h3>English 🇬🇧</h3>
+              <p>👀 The free trial provides view-only access.</p>
+              <p className="trial-promotion-highlight">✨ Get Full Access Today!</p>
+              <p>💰 Regular Price: Rs. 3,499<br/><strong>🔥 Special Introductory Price: Only Rs. 2,499!</strong></p>
+              <p>📞 Call or WhatsApp for more information:</p>
+              <a className="trial-promotion-number" href={bookshopWelcomeInfo.phoneHref}>076 766 0922</a>
+              <p>Enjoy a convenient, all-in-one solution for your creative and document needs!</p>
+            </section>
+            <a className="bookshop-whatsapp-action" href={bookshopWelcomeInfo.whatsappHref} target="_blank" rel="noopener noreferrer">
+              <MessageCircle size={17}/><span>WhatsApp · 076 766 0922</span>
+            </a>
+          </div>
+        </> : <>
+          <h2 id="bookshop-welcome-title">අපගේ Bookshop Application එකට සාදරයෙන් පිළිගනිමු! 🎉</h2>
+          <p className="bookshop-welcome-user">ආයුබෝවන්, {userName}.</p>
+          <p id="bookshop-welcome-message" className="bookshop-welcome-message">ඔබේ වැඩ පහසු කරන, කාලය ඉතිරි කරන නවීන ඩිජිටල් සහායකයෙක්.</p>
 
-        <section className="bookshop-info-section">
+          <section className="bookshop-info-section">
           <h3><BookOpen size={17}/> නිර්මාණකරු පිළිබඳව</h3>
           <p>{bookshopWelcomeInfo.purpose}</p>
           <p className="bookshop-creator-name">{bookshopWelcomeInfo.creatorName}</p>
-        </section>
+          </section>
 
-        <section className="bookshop-info-section">
+          <section className="bookshop-info-section">
           <h3><Check size={17}/> දැනට තිබෙන පහසුකම්</h3>
           <ul>{bookshopWelcomeInfo.currentFeatures.map(feature => <li key={feature}>{feature}</li>)}</ul>
-        </section>
+          </section>
 
-        <section className="bookshop-info-section">
+          <section className="bookshop-info-section">
           <h3><Lightbulb size={17}/> භාවිතයෙන් ලැබෙන ප්‍රයෝජන</h3>
           <ul>{bookshopWelcomeInfo.benefits.map(benefit => <li key={benefit}>{benefit}</li>)}</ul>
-        </section>
+          </section>
 
-        <section className="bookshop-info-section bookshop-future-section">
+          <section className="bookshop-info-section bookshop-future-section">
           <h3><Rocket size={17}/> ඉදිරියේදී එකතු කිරීමට බලාපොරොත්තු වන පහසුකම්</h3>
           <ul>{bookshopWelcomeInfo.futureFeatures.map(feature => <li key={feature}>{feature}</li>)}</ul>
-        </section>
+          </section>
 
-        <section className="bookshop-info-section bookshop-contact-section">
+          <section className="bookshop-info-section bookshop-contact-section">
           <h3><CircleHelp size={17}/> අප අමතන්න</h3>
           <p><Phone size={15}/> දුරකථන අංකය: <a href={bookshopWelcomeInfo.phoneHref}>{bookshopWelcomeInfo.phoneDisplay}</a></p>
           <p><MessageCircle size={15}/> WhatsApp අංකය: <span>{bookshopWelcomeInfo.phoneDisplay}</span></p>
           <a className="bookshop-whatsapp-action" href={bookshopWelcomeInfo.whatsappHref} target="_blank" rel="noopener noreferrer">
             <MessageCircle size={17}/><span>WhatsApp හරහා පණිවිඩයක් යවන්න</span>
           </a>
-        </section>
+          </section>
+        </>}
       </div>
       <footer className="bookshop-welcome-footer">
-        <p>ඔබගේ ඉගෙනුම් කටයුතු වඩාත් නිර්මාණශීලී සහ පහසු කරගනිමු!</p>
-        <button className="bookshop-welcome-start" type="button" data-modal-focus onClick={onClose}>
-          <span>හරි, Application එක භාවිතා කරමු!</span><Check size={17}/>
+        <p>{isTrial ? "Trial access is view-only. Contact us to unlock all features." : "ඔබගේ ඉගෙනුම් කටයුතු වඩාත් නිර්මාණශීලී සහ පහසු කරගනිමු!"}</p>
+        <button className="bookshop-welcome-start" type="button" data-trial-allow data-modal-focus onClick={onClose}>
+          <span>{isTrial ? "නැරඹීම ආරම්භ කරමු · Start browsing" : "හරි, Application එක භාවිතා කරමු!"}</span><Check size={17}/>
         </button>
       </footer>
     </section>

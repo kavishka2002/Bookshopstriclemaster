@@ -267,7 +267,7 @@ export function ColoringSheetLibrary() {
         <div className="eyebrow">PICTURE COLOURING LIBRARY</div>
         <h1 className="page-title mt-2">Find a picture to colour</h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">Browse Grade 1 picture sheets in title order, or search Sinhala, Singlish, and English names.</p>
-        <form className="mt-5 flex max-w-2xl items-center gap-2 rounded-2xl border border-white bg-white p-2 shadow-sm" onSubmit={event => { event.preventDefault(); saveSearch(); }}>
+        <form className="mt-5 flex max-w-2xl items-center gap-2 rounded-2xl border border-white bg-white p-2 shadow-sm" data-trial-allow onSubmit={event => { event.preventDefault(); saveSearch(); }}>
           <Search className="ml-2 shrink-0 text-[#5c8c75]" size={20}/>
           <input
             aria-label="Search colouring sheets"
@@ -281,7 +281,7 @@ export function ColoringSheetLibrary() {
         </form>
         <div className="mt-3 flex flex-wrap gap-2">
           {coloringCategories.filter(item => item !== "All").map(item =>
-            <button key={item} className={`filter-chip ${category === item ? "selected" : ""}`} onClick={() => { setCategory(category === item ? "All" : item); setVisibleLimit(PAGE_SIZE); }}>{categoryName(item)}</button>
+            <button key={item} data-trial-allow className={`filter-chip ${category === item ? "selected" : ""}`} onClick={() => { setCategory(category === item ? "All" : item); setVisibleLimit(PAGE_SIZE); }}>{categoryName(item)}</button>
           )}
         </div>
       </div>
@@ -298,7 +298,7 @@ export function ColoringSheetLibrary() {
       <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><BookOpen size={16} className="text-[#548b72]"/><h2 className="text-sm font-bold">Recently opened or printed</h2></div><button className="text-xs text-slate-500 hover:text-[#347765]" onClick={clearHistory}>Clear history</button></div>
       <div className="mt-3 flex flex-wrap gap-2">{recentSheets.map(item => {
         const sheet = recentById.get(item.id);
-        return sheet ? <button key={item.id} className="filter-chip" onClick={() => openPreview(sheet)}>{sheet.sinhalaName}{item.printedAt ? " · Print requested" : ""}</button> : null;
+        return sheet ? <button key={item.id} data-trial-allow className="filter-chip" onClick={() => openPreview(sheet)}>{sheet.sinhalaName}{item.printedAt ? " · Print requested" : ""}</button> : null;
       })}</div>
     </section>}
 
@@ -307,14 +307,14 @@ export function ColoringSheetLibrary() {
         <div><h2 className="text-lg font-bold">Colouring sheets</h2><p className="mt-1 text-xs text-slate-500">{loading ? "Reading local picture and PDF files…" : `${results.length} of ${sheets.length} sheets`}</p></div>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-xs text-slate-600">Grade
-            <select className="text-input !min-h-9 !w-auto" value={gradeFilter} onChange={event => { const value = event.target.value; setGradeFilter(value === "all" || value === "other" ? value : Number(value)); setVisibleLimit(PAGE_SIZE); }}>
+            <select className="text-input !min-h-9 !w-auto" data-trial-allow value={gradeFilter} onChange={event => { const value = event.target.value; setGradeFilter(value === "all" || value === "other" ? value : Number(value)); setVisibleLimit(PAGE_SIZE); }}>
               <option value="all">All grades</option>
               {[...new Set(sheets.map(sheet => sheet.grade).filter((grade): grade is number => grade !== null))].sort((a, b) => a - b).map(grade => <option key={grade} value={grade}>Grade {grade}</option>)}
               <option value="other">Other sheets</option>
             </select>
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-600">Sort
-            <select className="text-input !min-h-9 !w-auto" value={sortOrder} onChange={event => setSortOrder(event.target.value as "curriculum" | "name")}><option value="curriculum">Title order</option><option value="name">Name</option></select>
+            <select className="text-input !min-h-9 !w-auto" data-trial-allow value={sortOrder} onChange={event => setSortOrder(event.target.value as "curriculum" | "name")}><option value="curriculum">Title order</option><option value="name">Name</option></select>
           </label>
         </div>
       </div>
@@ -334,7 +334,7 @@ export function ColoringSheetLibrary() {
                 {sheet.mediaType === "image"
                   ? <Image src={sheet.url} alt={sheet.englishName} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" unoptimized className="object-contain"/>
                   : <PdfPageCanvas url={sheet.url} pageNumber={1} lazy/>}
-                <button className="absolute inset-0 z-20 w-full" aria-label={`Preview ${sheet.sinhalaName}`} onClick={() => openPreview(sheet)}/>
+                <button className="absolute inset-0 z-20 w-full" data-trial-allow aria-label={`Preview ${sheet.sinhalaName}`} onClick={() => openPreview(sheet)}/>
               </div>
               <div className="p-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b927e]">{categoryName(sheet.category)}</span>
@@ -342,7 +342,7 @@ export function ColoringSheetLibrary() {
                 {sheet.grade === null && <p className="truncate text-xs text-slate-500" title={sheet.englishName}>{sheet.englishName}</p>}
                 <p className="mt-1 text-[11px] text-slate-400">{sheet.mediaType === "pdf" ? "PDF" : "Image"} · {formatFileSize(sheet.sizeBytes)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="small-action flex-1" onClick={() => openPreview(sheet)}><BookOpen size={13}/> Preview</button>
+                  <button className="small-action flex-1" data-trial-allow onClick={() => openPreview(sheet)}><BookOpen size={13}/> Preview</button>
                   <button className="small-action flex-1" data-paid-feature onClick={() => openForPrint(sheet)}><Printer size={13}/> Print</button>
                   <a className="small-action flex-1" href={sheet.url} download><Download size={13}/> Save {sheet.mediaType === "pdf" ? "PDF" : "image"}</a>
                 </div>
@@ -351,8 +351,8 @@ export function ColoringSheetLibrary() {
               </div>
             </div>)}
             </div>
-            {results.length > visibleLimit && <div className="mt-5 text-center"><button className="secondary-button" onClick={() => setVisibleLimit(limit => limit + PAGE_SIZE)}>Show more ({results.length - visibleLimit} remaining)</button></div>}
-          </> : <div className="empty-large"><div className="empty-illustration"><Search size={26}/></div><h3>No matching colouring sheets</h3><p>Try a shorter Sinhala or English word, choose another category, or clear the search.</p><button className="secondary-button mt-4" onClick={() => { setQuery(""); setCategory("All"); setVisibleLimit(PAGE_SIZE); }}>Clear filters</button></div>}
+            {results.length > visibleLimit && <div className="mt-5 text-center"><button className="secondary-button" data-trial-allow onClick={() => setVisibleLimit(limit => limit + PAGE_SIZE)}>Show more ({results.length - visibleLimit} remaining)</button></div>}
+          </> : <div className="empty-large"><div className="empty-illustration"><Search size={26}/></div><h3>No matching colouring sheets</h3><p>Try a shorter Sinhala or English word, choose another category, or clear the search.</p><button className="secondary-button mt-4" data-trial-allow onClick={() => { setQuery(""); setCategory("All"); setVisibleLimit(PAGE_SIZE); }}>Clear filters</button></div>}
     </section>
 
     {selectedSheet && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3 md:p-8" role="dialog" aria-modal="true" aria-label={`Preview ${selectedSheet.sinhalaName}`} onMouseDown={event => { if (event.target === event.currentTarget) setSelectedSheet(null); }}>
@@ -361,13 +361,13 @@ export function ColoringSheetLibrary() {
           <div className="min-w-0"><h2 className="truncate text-sm font-bold">{selectedSheet.sinhalaName}</h2><p className="mt-1 text-xs text-slate-500">{categoryName(selectedSheet.category)} · {selectedSheet.mediaType === "pdf" ? "PDF" : "Image"} · {formatFileSize(selectedSheet.sizeBytes)}</p></div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {selectedSheet.mediaType === "pdf" && <div className="flex items-center gap-1 rounded-lg border border-slate-200 px-1">
-              <button className="icon-action !h-8 !w-8" aria-label="Previous page" disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}><ChevronLeft size={16}/></button>
+              <button className="icon-action !h-8 !w-8" data-trial-allow aria-label="Previous page" disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}><ChevronLeft size={16}/></button>
               <span className="min-w-16 text-center text-xs text-slate-500">Page {previewPage} / {previewPageCount || "…"}</span>
-              <button className="icon-action !h-8 !w-8" aria-label="Next page" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}><ChevronRight size={16}/></button>
+              <button className="icon-action !h-8 !w-8" data-trial-allow aria-label="Next page" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}><ChevronRight size={16}/></button>
             </div>}
             <button className="secondary-button !py-2" data-paid-feature title={selectedSheet.mediaType === "pdf" ? "Opens the PDF in a new tab; use the PDF viewer's Print control." : "Print this picture on an A4 page."} onClick={() => openForPrint(selectedSheet)}><Printer size={14}/> Print</button>
             <a className="secondary-button !py-2" href={selectedSheet.url} download><Download size={14}/> Save {selectedSheet.mediaType === "pdf" ? "PDF" : "image"}</a>
-            <button className="icon-action" aria-label="Close preview" onClick={() => setSelectedSheet(null)}><X size={18}/></button>
+            <button className="icon-action" data-trial-allow aria-label="Close preview" onClick={() => setSelectedSheet(null)}><X size={18}/></button>
           </div>
         </header>
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-100 p-3">

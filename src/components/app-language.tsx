@@ -769,7 +769,7 @@ export function useAppLanguage() {
 
 export function LanguageToggle() {
   const { language, toggle } = useAppLanguage();
-  return <button type="button" className="language-toggle" aria-label={language === "si" ? "Switch to English" : "සිංහලට මාරු වන්න"} onClick={toggle}>
+  return <button type="button" className="language-toggle" data-trial-allow aria-label={language === "si" ? "Switch to English" : "සිංහලට මාරු වන්න"} onClick={toggle}>
     <span>සි</span>
     <span>{language === "si" ? "සිංහල" : "English"}</span>
   </button>;
@@ -780,7 +780,7 @@ export function ThemeToggle() {
   const nextMode = theme === "dark"
     ? (language === "si" ? "ආලෝක තේමාවට මාරු වන්න" : "Switch to light mode")
     : (language === "si" ? "අඳුරු තේමාවට මාරු වන්න" : "Switch to dark mode");
-  return <button type="button" className="theme-toggle" aria-label={nextMode} title={nextMode} onClick={toggleTheme}>
+  return <button type="button" className="theme-toggle" data-trial-allow aria-label={nextMode} title={nextMode} onClick={toggleTheme}>
     {theme === "dark" ? <Sun size={16}/> : <Moon size={16}/>}
     <span>{theme === "dark" ? (language === "si" ? "අඳුරු" : "Dark") : (language === "si" ? "ආලෝක" : "Light")}</span>
   </button>;

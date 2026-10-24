@@ -474,7 +474,7 @@ export function PastPaperFinder() {
       {notice && <AppToast key={`success-${notice}`} variant="success" message={notice} onClose={() => setNotice("")}/>}
     </div>
 
-    <section className="soft-card p-5 md:p-6" aria-labelledby="paper-search-heading">
+    <section className="soft-card p-5 md:p-6" data-trial-allow aria-labelledby="paper-search-heading">
       <div className="mb-5 flex items-center gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf4ef] text-[#347765]"><Search size={19}/></div>
         <div><h2 id="paper-search-heading" className="text-base font-bold">Find &amp; Download</h2><p className="mt-1 text-xs text-slate-500">Exact source matches are downloaded, checked, and saved automatically.</p></div>
@@ -556,10 +556,10 @@ export function PastPaperFinder() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {isTrial && result.state === "Paper Found" && <button className="small-action" disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, false, true)}><BookOpen size={14}/> Preview PDF</button>}
+              {isTrial && result.state === "Paper Found" && <button className="small-action" data-trial-allow disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, false, true)}><BookOpen size={14}/> Preview PDF</button>}
               {result.existingPaper && <>
                 <button className="small-action" data-paid-feature onClick={() => openPaper(result.existingPaper!)}><FolderOpen size={14}/> Open</button>
-                <button className="small-action" onClick={() => showPreview(result.existingPaper!)}><BookOpen size={14}/> Preview</button>
+                <button className="small-action" data-trial-allow onClick={() => showPreview(result.existingPaper!)}><BookOpen size={14}/> Preview</button>
                 <button className="small-action" data-paid-feature onClick={() => { showPreview(result.existingPaper!); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
                 <button className="small-action" data-paid-feature onClick={() => exportPaper(result.existingPaper!)}><ArrowDownToLine size={14}/> Export</button>
                 {result.state === "Already Saved" && <button className="small-action" data-paid-feature disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, true)}>Download New Version</button>}
@@ -601,7 +601,7 @@ export function PastPaperFinder() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div><div className="eyebrow">SAVED ON THIS DEVICE</div><h2 id="paper-library-heading" className="mt-1 text-lg font-bold">Paper library <span className="text-sm font-medium text-slate-400">({papers.length})</span></h2><p className="mt-1 text-xs text-slate-500">Persistent browser storage is separate from files exported to your computer.</p></div>
       </div>
-      <div className="soft-card mb-4 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="soft-card mb-4 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5" data-trial-allow>
         <label className="search-box sm:col-span-2"><Search size={15}/><input aria-label="Search saved papers" className="!w-full" placeholder="Search year, subject, title, filename" value={libraryQuery} onChange={event => setLibraryQuery(event.target.value)}/></label>
         <label className="sr-only" htmlFor="paper-filter-exam">Filter by examination</label>
         <select id="paper-filter-exam" className="text-input" value={filterExamination} onChange={event => setFilterExamination(event.target.value as ExaminationType | "All")}><option value="All">All examinations</option>{examTypes.map(value => <option key={value}>{value}</option>)}</select>
@@ -631,7 +631,7 @@ export function PastPaperFinder() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 md:justify-end">
-                <button className="small-action" onClick={() => showPreview(paper)}><BookOpen size={14}/> Preview</button>
+                <button className="small-action" data-trial-allow onClick={() => showPreview(paper)}><BookOpen size={14}/> Preview</button>
                 <button className="small-action" data-paid-feature onClick={() => openPaper(paper)}><FolderOpen size={14}/> Open</button>
                 <button className="small-action" data-paid-feature onClick={() => { showPreview(paper); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
                 <button className="small-action" data-paid-feature onClick={() => exportPaper(paper)}><ArrowDownToLine size={14}/> Export</button>
@@ -649,11 +649,11 @@ export function PastPaperFinder() {
           <div className="flex gap-2">
               <button className="small-action" data-paid-feature onClick={() => previewFrame.current?.contentWindow?.print()}><Printer size={14}/> Print</button>
               <button className="small-action" data-paid-feature onClick={() => exportPaper(preview.paper)}><ArrowDownToLine size={14}/> Export</button>
-            <button className="small-action" aria-label="Close preview" onClick={closePreview}><X size={16}/></button>
+            <button className="small-action" data-trial-allow aria-label="Close preview" onClick={closePreview}><X size={16}/></button>
           </div>
         </div>
           {isTrial
-            ? <><div className="flex items-center justify-center gap-3 border-b border-slate-100 py-2 text-xs"><button className="small-action" disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}>Previous</button><span>Page {previewPage} / {previewPageCount || "…"}</span><button className="small-action" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}>Next</button></div><TrialPaperPreview url={preview.url} pageNumber={previewPage} onPageCount={setPreviewPageCount}/></>
+            ? <><div className="flex items-center justify-center gap-3 border-b border-slate-100 py-2 text-xs"><button className="small-action" data-trial-allow disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}>Previous</button><span>Page {previewPage} / {previewPageCount || "…"}</span><button className="small-action" data-trial-allow disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}>Next</button></div><TrialPaperPreview url={preview.url} pageNumber={previewPage} onPageCount={setPreviewPageCount}/></>
             : <iframe ref={previewFrame} title={`${preview.paper.title} PDF preview`} src={preview.url} className="min-h-0 flex-1 bg-slate-100"/>}
       </div>
     </div>}

@@ -1306,6 +1306,10 @@ button { cursor: pointer; }
 
 .auth-app-shell { display: flex; min-height: 100vh; flex-direction: column; }
 .trial-access-boundary { display: contents; }
+.trial-notice { position: relative; z-index: 29; overflow: hidden; border-bottom: 1px solid #921d23; background: #b62931; color: #fff; }
+.trial-notice-track { display: flex; width: max-content; align-items: center; gap: 3.5rem; padding: 9px 0; animation: trial-notice-scroll 36s linear infinite; }
+.trial-notice-track span { flex: 0 0 auto; white-space: nowrap; font-size: 11px; font-weight: 700; letter-spacing: .01em; }
+@keyframes trial-notice-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .auth-app-content { flex: 1 0 auto; }
 .auth-session-bar { position: sticky; z-index: 30; top: 0; display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 15px; border-bottom: 1px solid #e8edf0; background: rgb(255 255 255 / 96%); padding: 8px clamp(16px, 3vw, 42px); backdrop-filter: blur(12px); }
 .auth-session-brand, .auth-session-info, .auth-session-icon, .auth-manage-link, .auth-logout { display: flex; align-items: center; }
@@ -1339,6 +1343,11 @@ button { cursor: pointer; }
 .trial-payment-whatsapp { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; background: #168b49; padding: 0 16px; color: #fff; font-size: 12px; font-weight: 750; text-decoration: none; }
 .trial-payment-whatsapp:hover { background: #11773e; }
 .trial-payment-note { margin: 13px 0 0; color: #86938c; font-size: 10px; line-height: 1.6; }
+@media (prefers-reduced-motion: reduce) {
+  .trial-notice { overflow: visible; }
+  .trial-notice-track { width: 100%; flex-wrap: wrap; gap: 6px 16px; padding: 9px 12px; animation: none; }
+  .trial-notice-track span { white-space: normal; }
+}
 @media (max-width: 860px) {
   .workspace-footer { grid-template-columns: 1fr; gap: 11px; padding: 16px; }
   .workspace-footer-terms { border-top: 1px solid #e3eae5; border-left: 0; padding: 10px 0 0; }
@@ -1429,6 +1438,13 @@ button { cursor: pointer; }
 .bookshop-welcome-dialog h2 { max-width: 460px; margin: 8px auto 0; color: #28443a; font-size: 23px; font-weight: 800; line-height: 1.45; }
 .bookshop-welcome-user { margin: 8px 0 0; color: #527361; font-size: 13px; font-weight: 750; overflow-wrap: anywhere; }
 .bookshop-welcome-message { margin: 12px 0 0; color: #677671; font-size: 13px; line-height: 1.75; }
+.trial-promotion { display: grid; gap: 12px; margin-top: 16px; text-align: left; }
+.trial-promotion section { border: 1px solid #e3ebe4; border-radius: 13px; background: rgb(255 255 255 / 84%); padding: 14px 16px; }
+.trial-promotion h3 { margin: 0 0 9px; color: #315d49; font-size: 13px; font-weight: 800; }
+.trial-promotion p { margin: 8px 0 0; color: #52675c; font-size: 12px; line-height: 1.7; }
+.trial-promotion strong, .trial-promotion-highlight { color: #b64b2e !important; font-weight: 800; }
+.trial-promotion-number { display: inline-block; margin-top: 3px; color: #216b4a; font-size: 14px; font-weight: 850; text-decoration: none; }
+.trial-promotion-number:hover { text-decoration: underline; }
 .bookshop-info-section { margin-top: 18px; border: 1px solid #e3ebe4; border-radius: 12px; background: rgb(255 255 255 / 78%); padding: 15px 16px; text-align: left; }
 .bookshop-info-section h3 { display: flex; align-items: center; gap: 8px; margin: 0; color: #315d49; font-size: 13px; font-weight: 800; line-height: 1.5; }
 .bookshop-info-section h3 svg { flex: 0 0 auto; color: #58866a; }

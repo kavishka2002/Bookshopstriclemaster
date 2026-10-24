@@ -31,7 +31,7 @@ Customer accounts are provisioned **only in source code**; the application has n
 2. Add the generated record to `provisionedAccountSeeds` in [`src/data/local-account-seeds.ts`](./src/data/local-account-seeds.ts). The record contains a salted hash and salt, not the plaintext password.
 3. Run `npm run build`, then import/connect this GitHub repository in Vercel and deploy it as a Next.js project. Vercel supports the app's Next.js API routes; GitHub Pages does not. The same source-seeded `P321` credentials will then be initialized on localhost and Vercel in their separate browser profiles. Local user data is still not shared between them.
 
-The source also provisions a free preview account `T123 / 1234`. It can create and preview designs, but print, download, and export actions are locked behind a payment prompt for Rs. 2,499 with WhatsApp contact `0767660922`. This account is added alongside existing accounts; it does not replace them. Since these are browser-local accounts and the trial password is intentionally simple, do not use the trial account for private data.
+The source also provisions a free view-only account `T123 / 1234`. Trial users can browse sections, search and filter available resources, and preview existing content, but cannot create, edit, save, import, print, download, or export. The dashboard displays the Rs. 2,499 full-access price and WhatsApp contact `0767660922`. This account is added alongside existing accounts; it does not replace them. Since accounts and trial restrictions are enforced in the browser, they are not a server-side licensing boundary; the trial password is intentionally simple, so do not use the trial account for private data.
 
 The seed format is:
 
