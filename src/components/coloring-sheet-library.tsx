@@ -1,13 +1,14 @@
 "use client";
 
 import { BookOpen, ChevronLeft, ChevronRight, Download, FileText, History, LoaderCircle, Printer, Search, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { LocalizedUi } from "@/components/app-language";
 import { getActiveTenantId } from "@/lib/database";
 import {
-  coloringCategories, searchColoringSheets,
+  coloringCategories, searchColoringSheets, sortColoringSheets,
   type ColoringCategory, type ColoringSheet
 } from "@/lib/coloring-sheets";
 
@@ -120,7 +121,8 @@ export function ColoringSheetLibrary() {
   const [sheets, setSheets] = useState<ColoringSheet[]>([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ColoringCategory | "All">("All");
-  const [sortOrder, setSortOrder] = useState<"relevance" | "name">("relevance");
+  const [sortOrder, setSortOrder] = useState<"curriculum" | "name">("curriculum");
+  const [gradeFilter, setGradeFilter] = useState<number | "all" | "other">(1);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => typeof window === "undefined" ? [] : readArray<string>(SEARCH_HISTORY_KEY()));
   const [recentSheets, setRecentSheets] = useState<RecentSheet[]>(() => typeof window === "undefined" ? [] : readArray<RecentSheet>(RECENT_HISTORY_KEY()));
   const [selectedSheet, setSelectedSheet] = useState<ColoringSheet | null>(null);
@@ -150,8 +152,30 @@ export function ColoringSheetLibrary() {
 
   const results = useMemo(() => {
     const matches = searchColoringSheets(sheets, query, category);
-    return sortOrder === "name" ? [...matches].sort((a, b) => a.sinhalaName.localeCompare(b.sinhalaName, "si")) : matches;
-  }, [category, query, sheets, sortOrder]);
+    const gradeMatches = matches.filter(sheet => gradeFilter === "all"
+      || gradeFilter === "other" && sheet.grade === null
+      || typeof gradeFilter === "number" && sheet.grade === gradeFilter);
+    return sortColoringSheets(gradeMatches, sortOrder);
+  }, [category, gradeFilter, query, sheets, sortOrder]);
+
+  const resultGroups = useMemo(() => {
+    const groups = new Map<string, { grade: number | null; titleOrder: number | null; titleSinhala: string | null; titleTransliteration: string | null; sheets: ColoringSheet[] }>();
+    for (const sheet of results.slice(0, visibleLimit)) {
+      const key = sheet.grade === null ? "other" : `${sheet.grade}-${sheet.titleOrder ?? 0}`;
+      const group = groups.get(key) ?? {
+        grade: sheet.grade,
+        titleOrder: sheet.titleOrder,
+        titleSinhala: sheet.titleSinhala,
+        titleTransliteration: sheet.titleTransliteration,
+        sheets: []
+      };
+      group.sheets.push(sheet);
+      groups.set(key, group);
+    }
+    return [...groups.values()].sort((left, right) =>
+      (left.grade ?? Number.MAX_SAFE_INTEGER) - (right.grade ?? Number.MAX_SAFE_INTEGER)
+      || (left.titleOrder ?? Number.MAX_SAFE_INTEGER) - (right.titleOrder ?? Number.MAX_SAFE_INTEGER));
+  }, [results, visibleLimit]);
 
   const recentById = useMemo(() => new Map(sheets.map(sheet => [sheet.id, sheet])), [sheets]);
 
@@ -189,7 +213,38 @@ export function ColoringSheetLibrary() {
   };
 
   const openForPrint = (sheet: ColoringSheet) => {
-    window.open(sheet.url, "_blank", "noopener,noreferrer");
+    if (sheet.mediaType === "pdf") {
+      window.open(sheet.url, "_blank", "noopener,noreferrer");
+      rememberSheet(sheet, Date.now());
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      setHistoryError("Allow pop-ups to open the A4 print sheet.");
+      return;
+    }
+    const printDocument = printWindow.document;
+    printDocument.title = sheet.titleSinhala ?? sheet.sinhalaName;
+    const style = printDocument.createElement("style");
+    style.textContent = "html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center}.print-page{width:210mm;height:297mm;display:grid;place-items:center;overflow:hidden;background:white}.print-page img{display:block;width:100%;height:100%;object-fit:contain}@media print{.print-page{break-after:page}}";
+    printDocument.head.append(style);
+    const page = printDocument.createElement("main");
+    page.className = "print-page";
+    const image = printDocument.createElement("img");
+    image.alt = sheet.titleSinhala ?? sheet.sinhalaName;
+    image.addEventListener("load", () => {
+      const landscape = image.naturalWidth > image.naturalHeight;
+      style.textContent = `@page{size:A4 ${landscape ? "landscape" : "portrait"};margin:0}html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center}.print-page{width:${landscape ? "297mm" : "210mm"};height:${landscape ? "210mm" : "297mm"};display:grid;place-items:center;overflow:hidden;background:white}.print-page img{display:block;width:100%;height:100%;object-fit:contain}@media print{.print-page{break-after:page}}`;
+      printWindow.focus();
+      printWindow.print();
+    }, { once: true });
+    image.addEventListener("error", () => {
+      printDocument.body.textContent = "This picture could not be loaded for printing.";
+    }, { once: true });
+    page.append(image);
+    printDocument.body.append(page);
+    image.src = sheet.url;
     rememberSheet(sheet, Date.now());
   };
 
@@ -211,7 +266,7 @@ export function ColoringSheetLibrary() {
       <div className="max-w-3xl">
         <div className="eyebrow">PICTURE COLOURING LIBRARY</div>
         <h1 className="page-title mt-2">Find a picture to colour</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Search the shop’s locally stored PDF sheets by Sinhala or English name, topic, or category.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Browse Grade 1 picture sheets in title order, or search Sinhala, Singlish, and English names.</p>
         <form className="mt-5 flex max-w-2xl items-center gap-2 rounded-2xl border border-white bg-white p-2 shadow-sm" onSubmit={event => { event.preventDefault(); saveSearch(); }}>
           <Search className="ml-2 shrink-0 text-[#5c8c75]" size={20}/>
           <input
@@ -249,18 +304,36 @@ export function ColoringSheetLibrary() {
 
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div><h2 className="text-lg font-bold">Colouring sheets</h2><p className="mt-1 text-xs text-slate-500">{loading ? "Reading local PDF files…" : `${results.length} of ${sheets.length} PDF sheets`}</p></div>
-        <label className="flex items-center gap-2 text-xs text-slate-600">Sort
-          <select className="text-input !min-h-9 !w-auto" value={sortOrder} onChange={event => setSortOrder(event.target.value as "relevance" | "name")}><option value="relevance">Most relevant</option><option value="name">Name</option></select>
-        </label>
+        <div><h2 className="text-lg font-bold">Colouring sheets</h2><p className="mt-1 text-xs text-slate-500">{loading ? "Reading local picture and PDF files…" : `${results.length} of ${sheets.length} sheets`}</p></div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-slate-600">Grade
+            <select className="text-input !min-h-9 !w-auto" value={gradeFilter} onChange={event => { const value = event.target.value; setGradeFilter(value === "all" || value === "other" ? value : Number(value)); setVisibleLimit(PAGE_SIZE); }}>
+              <option value="all">All grades</option>
+              {[...new Set(sheets.map(sheet => sheet.grade).filter((grade): grade is number => grade !== null))].sort((a, b) => a - b).map(grade => <option key={grade} value={grade}>Grade {grade}</option>)}
+              <option value="other">Other sheets</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-xs text-slate-600">Sort
+            <select className="text-input !min-h-9 !w-auto" value={sortOrder} onChange={event => setSortOrder(event.target.value as "curriculum" | "name")}><option value="curriculum">Title order</option><option value="name">Name</option></select>
+          </label>
+        </div>
       </div>
-      {error ? <div className="empty-large" role="alert"><h3>Could not load local PDFs</h3><p>{error}</p></div>
+      {error ? <div className="empty-large" role="alert"><h3>Could not load colouring sheets</h3><p>{error}</p></div>
         : loading ? <div className="soft-card flex items-center justify-center gap-3 p-10 text-sm text-slate-500"><LoaderCircle className="animate-spin" size={19}/> Loading the PDF library…</div>
           : results.length ? <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {results.slice(0, visibleLimit).map(sheet => <article className="soft-card overflow-hidden" key={sheet.id}>
+            <div className="space-y-7">
+            {resultGroups.map(group => <div key={`${group.grade ?? "other"}-${group.titleOrder ?? "all"}`}>
+              {group.grade !== null && <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-[#e5eee8] pb-2">
+                <h3 className="text-base font-bold text-[#315f4b]">Title {group.titleOrder}: {group.titleSinhala}</h3>
+                <span className="text-xs text-slate-500">{group.titleTransliteration}</span>
+              </div>}
+              {group.grade === null && <h3 className="mb-3 text-base font-bold text-[#315f4b]">Other colouring sheets</h3>}
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {group.sheets.map(sheet => <article className="soft-card overflow-hidden" key={sheet.id}>
               <div className="relative h-44 overflow-hidden bg-[#f4f7f4]">
-                <PdfPageCanvas url={sheet.url} pageNumber={1} lazy/>
+                {sheet.mediaType === "image"
+                  ? <Image src={sheet.url} alt={sheet.englishName} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" unoptimized className="object-contain"/>
+                  : <PdfPageCanvas url={sheet.url} pageNumber={1} lazy/>}
                 <button className="absolute inset-0 z-20 w-full" aria-label={`Preview ${sheet.sinhalaName}`} onClick={() => openPreview(sheet)}/>
               </div>
               <div className="p-4">
@@ -275,6 +348,8 @@ export function ColoringSheetLibrary() {
                 </div>
               </div>
             </article>)}
+              </div>
+            </div>)}
             </div>
             {results.length > visibleLimit && <div className="mt-5 text-center"><button className="secondary-button" onClick={() => setVisibleLimit(limit => limit + PAGE_SIZE)}>Show more ({results.length - visibleLimit} remaining)</button></div>}
           </> : <div className="empty-large"><div className="empty-illustration"><Search size={26}/></div><h3>No matching colouring sheets</h3><p>Try a shorter Sinhala or English word, choose another category, or clear the search.</p><button className="secondary-button mt-4" onClick={() => { setQuery(""); setCategory("All"); setVisibleLimit(PAGE_SIZE); }}>Clear filters</button></div>}
@@ -283,20 +358,22 @@ export function ColoringSheetLibrary() {
     {selectedSheet && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3 md:p-8" role="dialog" aria-modal="true" aria-label={`Preview ${selectedSheet.sinhalaName}`} onMouseDown={event => { if (event.target === event.currentTarget) setSelectedSheet(null); }}>
       <section className="flex h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 md:px-5">
-          <div className="min-w-0"><h2 className="truncate text-sm font-bold">{selectedSheet.sinhalaName}</h2><p className="mt-1 text-xs text-slate-500">{categoryName(selectedSheet.category)} · PDF · {formatFileSize(selectedSheet.sizeBytes)}</p></div>
+          <div className="min-w-0"><h2 className="truncate text-sm font-bold">{selectedSheet.sinhalaName}</h2><p className="mt-1 text-xs text-slate-500">{categoryName(selectedSheet.category)} · {selectedSheet.mediaType === "pdf" ? "PDF" : "Image"} · {formatFileSize(selectedSheet.sizeBytes)}</p></div>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 px-1">
+            {selectedSheet.mediaType === "pdf" && <div className="flex items-center gap-1 rounded-lg border border-slate-200 px-1">
               <button className="icon-action !h-8 !w-8" aria-label="Previous page" disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}><ChevronLeft size={16}/></button>
               <span className="min-w-16 text-center text-xs text-slate-500">Page {previewPage} / {previewPageCount || "…"}</span>
               <button className="icon-action !h-8 !w-8" aria-label="Next page" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}><ChevronRight size={16}/></button>
-            </div>
-            <button className="secondary-button !py-2" title="Opens the PDF in a new tab; use the PDF viewer's Print control." onClick={() => openForPrint(selectedSheet)}><Printer size={14}/> Print</button>
-            <a className="secondary-button !py-2" href={selectedSheet.url} download><Download size={14}/> Save PDF</a>
+            </div>}
+            <button className="secondary-button !py-2" title={selectedSheet.mediaType === "pdf" ? "Opens the PDF in a new tab; use the PDF viewer's Print control." : "Print this picture on an A4 page."} onClick={() => openForPrint(selectedSheet)}><Printer size={14}/> Print</button>
+            <a className="secondary-button !py-2" href={selectedSheet.url} download><Download size={14}/> Save {selectedSheet.mediaType === "pdf" ? "PDF" : "image"}</a>
             <button className="icon-action" aria-label="Close preview" onClick={() => setSelectedSheet(null)}><X size={18}/></button>
           </div>
         </header>
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-slate-100 p-3">
-          <PdfPageCanvas url={selectedSheet.url} pageNumber={previewPage} onPageCount={setPreviewPageCount}/>
+          {selectedSheet.mediaType === "image"
+            ? <Image src={selectedSheet.url} alt={selectedSheet.englishName} width={1600} height={1200} unoptimized className="max-h-full max-w-full object-contain"/>
+            : <PdfPageCanvas url={selectedSheet.url} pageNumber={previewPage} onPageCount={setPreviewPageCount}/>}
         </div>
       </section>
     </div>}

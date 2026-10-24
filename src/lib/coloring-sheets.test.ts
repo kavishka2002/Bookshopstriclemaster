@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createColoringSheet, searchColoringSheets } from "./coloring-sheets";
+import { createColoringSheet, createGradeColoringSheet, searchColoringSheets, sortColoringSheets } from "./coloring-sheets";
 
 const sheets = [
   createColoringSheet("පින්තුර/මල් වර්ග.pdf", "/පින්තුර/මල්%20වර්ග.pdf", 1000),
@@ -29,5 +29,15 @@ describe("colouring sheet catalogue and search", () => {
     expect(sports.sinhalaName).toBe("අපේ ක්‍රීඩකයෝ");
     expect(sports.category).toBe("Sports");
     expect(searchColoringSheets([sports], "ක්‍රීඩා")).toHaveLength(1);
+  });
+
+  it("keeps Grade 1 sheets in curriculum title order with Sinhala labels", () => {
+    const titleThree = createGradeColoringSheet("Grade 1/Title 3 waththta ena sathun/wathata ena sathun.png", "/Grade%201/title-3.png", 500);
+    const titleOne = createGradeColoringSheet("Grade 1/Title 1 pasala awata/apay pasaly gas warga.png", "/Grade%201/title-1.png", 600);
+
+    expect(titleThree).toMatchObject({ mediaType: "image", grade: 1, titleOrder: 3, titleSinhala: "වත්තට එන සතුන්" });
+    expect(searchColoringSheets([titleThree], "waththata ena sathun")).toHaveLength(1);
+    expect(searchColoringSheets([titleThree], "සතුන්")).toHaveLength(1);
+    expect(sortColoringSheets([titleThree, titleOne], "curriculum").map(sheet => sheet.titleOrder)).toEqual([1, 3]);
   });
 });

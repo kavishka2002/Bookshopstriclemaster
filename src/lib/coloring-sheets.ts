@@ -20,6 +20,32 @@ export type ColoringSheet = {
   category: ColoringCategory;
   url: string;
   sizeBytes: number;
+  mediaType: "pdf" | "image";
+  grade: number | null;
+  titleOrder: number | null;
+  titleSinhala: string | null;
+  titleTransliteration: string | null;
+};
+
+const gradeTitles: Record<number, Record<number, { sinhala: string; transliteration: string }>> = {
+  1: {
+    1: { sinhala: "පාසල අවට", transliteration: "pasala awata" },
+    2: { sinhala: "අප අවට නිවාස", transliteration: "apa awata niwasa" },
+    3: { sinhala: "වත්තට එන සතුන්", transliteration: "waththata ena sathun" },
+    4: { sinhala: "අප අවට ජලය", transliteration: "apa awata jalaya" },
+    5: { sinhala: "අලුත් අවුරුද්ද", transliteration: "aluth aurudda" },
+    6: { sinhala: "අහස", transliteration: "ahasa" },
+    7: { sinhala: "අපි කන කෑම", transliteration: "api kana kama" },
+    8: { sinhala: "අපට තොරතුරු ලැබෙන විදිය", transliteration: "apata thorathuru labena widiya" },
+    9: { sinhala: "අප අවට පරිසරයේ සිදුවන වෙනස්කම්", transliteration: "apa awata parisaraye siduwana wenas kam" },
+    10: { sinhala: "අපේ යහ පැවැත්ම", transliteration: "ape yaha pawathma" },
+    11: { sinhala: "අපට ඕනෑ දේ ලැබෙන හැටි", transliteration: "apata one de labena hati" },
+    12: { sinhala: "ගමන් බිමන්", transliteration: "gaman biman" },
+    13: { sinhala: "ආලෝකය", transliteration: "alokaya" },
+    14: { sinhala: "වැඩ කරන අය සහ උපකරණ", transliteration: "wada karana aya saha upakarana" },
+    15: { sinhala: "පරිසරයේ වෙනස් තැන්", transliteration: "parisaraye wens than" },
+    16: { sinhala: "අපේ උදව් ඕනෑ අය", transliteration: "ape udau ona aya" }
+  }
 };
 
 const categoryRules: Array<{ category: ColoringCategory; names: string[]; terms: string[] }> = [
@@ -83,14 +109,36 @@ function searchable(value: string): string {
 
 export function createColoringSheet(filePath: string, url: string, sizeBytes: number): ColoringSheet {
   const filename = filePath.split("/").at(-1) ?? filePath;
-  const sinhalaName = filename.replace(/\.pdf$/i, "").replace(/_/g, "\u200d").trim();
+  const sinhalaName = filename.replace(/\.(pdf|png|jpe?g|webp)$/i, "").replace(/_/g, "\u200d").trim();
   const normalizedName = searchable(sinhalaName);
   const rule = categoryRules.find(candidate => candidate.terms.some(term => normalizedName.includes(searchable(term))));
   const category = rule?.category ?? "Other";
   const override = metadataOverrides[filename];
   const englishName = override?.englishName ?? rule?.names[0] ?? "Learning sheet";
   const keywords = [...new Set([sinhalaName, englishName, ...(rule?.terms ?? []), ...(override?.keywords ?? [])])];
-  return { id: filePath, sinhalaName, englishName, keywords, category, url, sizeBytes };
+  return { id: filePath, sinhalaName, englishName, keywords, category, url, sizeBytes, mediaType: /\.pdf$/i.test(filename) ? "pdf" : "image", grade: null, titleOrder: null, titleSinhala: null, titleTransliteration: null };
+}
+
+export function createGradeColoringSheet(filePath: string, url: string, sizeBytes: number): ColoringSheet {
+  const sheet = createColoringSheet(filePath, url, sizeBytes);
+  const match = filePath.match(/^Grade (\d+)\/Title (\d+) ([^/]+)\//i);
+  if (!match) return sheet;
+
+  const grade = Number(match[1]);
+  const titleOrder = Number(match[2]);
+  const title = gradeTitles[grade]?.[titleOrder];
+  const titleTransliteration = title?.transliteration ?? match[3].replace(/^Title\s+\d+\s*/i, "").trim();
+  const titleSinhala = title?.sinhala ?? titleTransliteration;
+  const filename = filePath.split("/").at(-1)?.replace(/\.(png|jpe?g|webp|pdf)$/i, "") ?? sheet.sinhalaName;
+  return {
+    ...sheet,
+    grade,
+    titleOrder,
+    titleSinhala,
+    titleTransliteration,
+    englishName: filename,
+    keywords: [...new Set([...sheet.keywords, filePath, titleSinhala, titleTransliteration, filename])]
+  };
 }
 
 export function normalizeColoringQuery(query: string): string {
@@ -127,6 +175,16 @@ export function searchColoringSheets(sheets: ColoringSheet[], query: string, cat
     .filter(result => !normalizedQuery || result.score > 0)
     .sort((left, right) => right.score - left.score || left.sheet.sinhalaName.localeCompare(right.sheet.sinhalaName, "si"))
     .map(result => result.sheet);
+}
+
+export function sortColoringSheets(sheets: ColoringSheet[], order: "curriculum" | "name"): ColoringSheet[] {
+  return [...sheets].sort((left, right) => {
+    if (order === "name") return left.sinhalaName.localeCompare(right.sinhalaName, "si");
+    const gradeDifference = (left.grade ?? Number.MAX_SAFE_INTEGER) - (right.grade ?? Number.MAX_SAFE_INTEGER);
+    if (gradeDifference) return gradeDifference;
+    const titleDifference = (left.titleOrder ?? Number.MAX_SAFE_INTEGER) - (right.titleOrder ?? Number.MAX_SAFE_INTEGER);
+    return titleDifference || left.sinhalaName.localeCompare(right.sinhalaName, "si");
+  });
 }
 
 export const coloringCategories: Array<ColoringCategory | "All"> = [

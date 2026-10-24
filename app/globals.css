@@ -1378,6 +1378,76 @@ button { cursor: pointer; }
 .auth-spin { animation: auth-spin 1s linear infinite; }
 @keyframes auth-spin { to { transform: rotate(360deg); } }
 @keyframes auth-appear { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+.bookshop-modal-backdrop, .whatsapp-contact-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; backdrop-filter: blur(5px); animation: bookshop-modal-fade .2s ease both; }
+.bookshop-modal-backdrop { z-index: 120; background: rgb(26 42 41 / 52%); }
+.bookshop-welcome-dialog { position: relative; display: flex; width: min(100%, 560px); max-height: min(88vh, 760px); max-height: min(88dvh, 760px); flex-direction: column; overflow: hidden; border: 1px solid #e3ece5; border-radius: 22px; background: linear-gradient(155deg, #fff 12%, #f4f8f4 100%); box-shadow: 0 28px 90px rgb(18 40 33 / 28%); color: #293c3b; animation: bookshop-modal-scale .25s cubic-bezier(.2,.8,.2,1) both; }
+.bookshop-welcome-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 29px clamp(21px, 5vw, 38px) 8px; text-align: center; scrollbar-color: #b8cfc0 transparent; scrollbar-width: thin; }
+.bookshop-modal-close, .whatsapp-contact-close { position: absolute; top: 13px; right: 13px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #e4ebe6; border-radius: 11px; background: #fff; color: #5d7469; cursor: pointer; transition: background .16s, border-color .16s, transform .16s; }
+.bookshop-modal-close:hover, .whatsapp-contact-close:hover { transform: rotate(5deg); border-color: #bfd4c4; background: #f2f8f3; }
+.bookshop-modal-close:focus-visible, .whatsapp-contact-close:focus-visible, .bookshop-welcome-start:focus-visible, .whatsapp-contact-action:focus-visible, .whatsapp-contact-dismiss:focus-visible, .whatsapp-float-button:focus-visible { outline: 3px solid #98c6a8; outline-offset: 3px; }
+.bookshop-welcome-art { position: relative; display: grid; width: 76px; height: 76px; place-items: center; margin: 1px auto 17px; border: 1px solid #d9e9dd; border-radius: 23px; background: linear-gradient(145deg, #e9f5eb, #f8f4e9); color: #397b68; }
+.bookshop-welcome-book { display: grid; width: 54px; height: 54px; place-items: center; border: 1px solid #d4e4d8; border-radius: 16px; background: #fff; box-shadow: 0 5px 14px rgb(47 92 68 / 10%); }
+.bookshop-welcome-sparkle { position: absolute; top: -8px; right: -8px; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid #f2dfb9; border-radius: 50%; background: #fff8e9; color: #b17b2e; }
+.bookshop-dialog-eyebrow { margin: 0; color: #5f8b70; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.bookshop-welcome-dialog h2 { max-width: 460px; margin: 8px auto 0; color: #28443a; font-size: 23px; font-weight: 800; line-height: 1.45; }
+.bookshop-welcome-user { margin: 8px 0 0; color: #527361; font-size: 13px; font-weight: 750; overflow-wrap: anywhere; }
+.bookshop-welcome-message { margin: 12px 0 0; color: #677671; font-size: 13px; line-height: 1.75; }
+.bookshop-info-section { margin-top: 18px; border: 1px solid #e3ebe4; border-radius: 12px; background: rgb(255 255 255 / 78%); padding: 15px 16px; text-align: left; }
+.bookshop-info-section h3 { display: flex; align-items: center; gap: 8px; margin: 0; color: #315d49; font-size: 13px; font-weight: 800; line-height: 1.5; }
+.bookshop-info-section h3 svg { flex: 0 0 auto; color: #58866a; }
+.bookshop-info-section p { margin: 9px 0 0; color: #64736b; font-size: 12px; line-height: 1.8; }
+.bookshop-info-section .bookshop-creator-name { color: #375e49; font-weight: 750; }
+.bookshop-info-section ul { display: grid; gap: 8px; margin: 11px 0 0; padding: 0; list-style: none; }
+.bookshop-info-section li { position: relative; padding-left: 17px; color: #64736b; font-size: 12px; line-height: 1.7; }
+.bookshop-info-section li::before { position: absolute; top: 0; left: 0; color: #4b8a66; font-weight: 800; content: "✓"; }
+.bookshop-future-section { border-color: #eddfc4; background: #fffcf5; }
+.bookshop-future-section h3, .bookshop-future-section h3 svg { color: #8c6a2e; }
+.bookshop-contact-section > p { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.bookshop-contact-section > p svg { flex: 0 0 auto; color: #568368; }
+.bookshop-contact-section a:not(.bookshop-whatsapp-action) { color: #356c52; font-weight: 750; text-decoration: none; }
+.bookshop-contact-section a:not(.bookshop-whatsapp-action):hover { text-decoration: underline; }
+.bookshop-whatsapp-action { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; margin-top: 13px; border-radius: 9px; background: #168b49; color: white; font-size: 11px; font-weight: 750; text-align: center; text-decoration: none; transition: background .16s, transform .16s; }
+.bookshop-whatsapp-action:hover { transform: translateY(-1px); background: #11773e; }
+.bookshop-welcome-footer { flex: 0 0 auto; border-top: 1px solid #e7eee8; background: rgb(255 255 255 / 94%); padding: 12px clamp(21px, 5vw, 38px) 17px; text-align: center; }
+.bookshop-welcome-footer p { margin: 0; color: #78867e; font-size: 11px; line-height: 1.6; }
+.bookshop-welcome-start { display: inline-flex; min-height: 44px; max-width: 100%; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; border: 0; border-radius: 10px; background: #34775d; padding: 0 18px; color: #fff; font-size: 12px; font-weight: 750; line-height: 1.5; cursor: pointer; box-shadow: 0 8px 20px rgb(52 119 93 / 20%); transition: transform .16s, background .16s, box-shadow .16s; }
+.bookshop-welcome-start:hover { transform: translateY(-1px); background: #28674e; box-shadow: 0 11px 24px rgb(52 119 93 / 27%); }
+.bookshop-welcome-footer { margin: 18px 0 0; border-top: 1px solid #e7eee8; padding-top: 14px; color: #8a968d; font-size: 11px; line-height: 1.6; }
+.whatsapp-float-button { position: fixed; z-index: 111; right: max(20px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom)); display: grid; width: 60px; height: 60px; place-items: center; border: 0; border-radius: 50%; background: #25D366; color: #fff; box-shadow: 0 8px 23px rgb(22 105 61 / 28%); cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s; }
+.whatsapp-float-button:hover { transform: translateY(-3px) scale(1.04); background: #20c45d; box-shadow: 0 12px 28px rgb(22 105 61 / 36%); }
+.whatsapp-brand-icon { width: 30px; height: 30px; fill: currentColor; }
+.whatsapp-float-tooltip { position: absolute; right: calc(100% + 11px); top: 50%; width: max-content; max-width: calc(100vw - 110px); transform: translateY(-50%) translateX(4px); border-radius: 7px; background: #1d3329; padding: 8px 10px; color: #fff; font-size: 11px; font-weight: 650; opacity: 0; pointer-events: none; transition: opacity .16s, transform .16s; }
+.whatsapp-float-tooltip::after { position: absolute; top: 50%; right: -5px; width: 9px; height: 9px; transform: translateY(-50%) rotate(45deg); background: #1d3329; content: ""; }
+.whatsapp-float-button:hover .whatsapp-float-tooltip, .whatsapp-float-button:focus-visible .whatsapp-float-tooltip { transform: translateY(-50%) translateX(0); opacity: 1; }
+.whatsapp-contact-backdrop { z-index: 110; place-items: end; background: rgb(18 35 28 / 12%); padding: 18px max(20px, env(safe-area-inset-right)) max(94px, calc(env(safe-area-inset-bottom) + 82px)); }
+.whatsapp-contact-dialog { position: relative; width: min(100%, 350px); border: 1px solid #dcebe0; border-radius: 17px; background: #fff; padding: 23px 21px 18px; box-shadow: 0 17px 55px rgb(26 60 40 / 20%); color: #2b4036; animation: bookshop-modal-scale .2s cubic-bezier(.2,.8,.2,1) both; }
+.whatsapp-contact-kicker { display: inline-flex; align-items: center; gap: 6px; color: #54886a; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.whatsapp-contact-dialog h2 { margin: 11px 34px 0 0; color: #244b36; font-size: 21px; font-weight: 800; line-height: 1.3; }
+.whatsapp-contact-dialog > p { margin: 9px 0 0; color: #62736a; font-size: 12px; line-height: 1.7; }
+.whatsapp-contact-number { display: inline-flex; align-items: center; gap: 8px; margin-top: 13px; color: #416b51; font-size: 12px; font-weight: 750; text-decoration: none; }
+.whatsapp-contact-number:hover { text-decoration: underline; }
+.whatsapp-contact-action { display: flex; min-height: 45px; align-items: center; justify-content: center; gap: 9px; margin-top: 17px; border-radius: 10px; background: #168b49; color: white; font-size: 12px; font-weight: 750; text-decoration: none; transition: background .16s, transform .16s; }
+.whatsapp-contact-action:hover { transform: translateY(-1px); background: #11773e; }
+.whatsapp-contact-dismiss { width: 100%; min-height: 37px; margin-top: 7px; border: 0; border-radius: 9px; background: transparent; color: #62756a; font-size: 11px; font-weight: 700; cursor: pointer; }
+.whatsapp-contact-dismiss:hover { background: #f2f7f3; }
+@keyframes bookshop-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bookshop-modal-scale { from { opacity: 0; transform: translateY(9px) scale(.975); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 520px) {
+  .bookshop-modal-backdrop { padding: 14px; }
+  .bookshop-welcome-dialog { max-height: 91vh; max-height: 91dvh; border-radius: 19px; }
+  .bookshop-welcome-scroll { padding: 26px 17px 7px; }
+  .bookshop-welcome-dialog h2 { font-size: 20px; }
+  .bookshop-info-section { margin-top: 13px; padding: 13px 12px; }
+  .bookshop-welcome-footer { padding: 10px 15px 13px; }
+  .bookshop-welcome-start { width: 100%; }
+  .whatsapp-float-button { width: 54px; height: 54px; }
+  .whatsapp-contact-backdrop { padding-right: 14px; padding-left: 14px; }
+  .whatsapp-contact-dialog { width: min(100%, 350px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bookshop-modal-backdrop, .bookshop-welcome-dialog, .whatsapp-contact-backdrop, .whatsapp-contact-dialog { animation-duration: .01ms; }
+  .whatsapp-float-button, .whatsapp-float-tooltip, .bookshop-modal-close, .whatsapp-contact-close, .bookshop-welcome-start, .whatsapp-contact-action { transition-duration: .01ms; }
+}
 .account-manager-page { min-height: calc(100vh - 54px); background: #f7f8f7; padding: clamp(20px, 4vw, 46px); color: #2b4051; }
 .account-manager-header, .account-list-heading, .account-backup-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .account-manager-header { max-width: 1200px; margin: 0 auto 20px; }

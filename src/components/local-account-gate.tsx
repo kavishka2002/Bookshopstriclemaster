@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { BookOpen, Download, Eye, EyeOff, Info, KeyRound, LogOut, Mail, Phone, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
 import { AppLanguageProvider, LanguageToggle, ThemeToggle, useAppLanguage } from "@/components/app-language";
+import { WelcomePopup, WhatsAppContact } from "@/components/bookshop-contact-widgets";
 import {
   backupAccountMetadata, changeLocalShopName, changeLocalUsername, initializeLocalAccounts,
   isLegacyDataMigrated, listLocalAccounts, loginLocalAccount, markLegacyDataMigrated, saveAccountPassword,
@@ -84,6 +85,7 @@ function GateContent({ children }: { children: ReactNode }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showManager, setShowManager] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
   useEffect(() => {
@@ -104,6 +106,7 @@ function GateContent({ children }: { children: ReactNode }) {
     const timeout = window.setTimeout(() => {
       setAccount(null);
       setShowManager(false);
+      setShowWelcome(false);
       setError("Your local session expired. Sign in again.");
     }, Math.max(0, sessionExpiry - Date.now()));
     return () => window.clearTimeout(timeout);
@@ -125,6 +128,7 @@ function GateContent({ children }: { children: ReactNode }) {
     setScope(loggedIn.id);
     setAccount(loggedIn);
     setPendingChange(null);
+    setShowWelcome(true);
     setSessionExpiry(Date.now() + 8 * 60 * 60 * 1000);
     setPassword("");
     setError("");
@@ -170,6 +174,7 @@ function GateContent({ children }: { children: ReactNode }) {
     setAccount(null);
     setPendingChange(null);
     setShowManager(false);
+    setShowWelcome(false);
     setSessionExpiry(null);
     setPassword("");
     setError("");
@@ -223,6 +228,8 @@ function GateContent({ children }: { children: ReactNode }) {
   return <div className="auth-app-shell">
     <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><BookOpen size={16}/></div><span>Little Paper</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
     <div className="auth-app-content">{showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}</div>
+    <WelcomePopup open={showWelcome} userName={account.username} onClose={() => setShowWelcome(false)}/>
+    <WhatsAppContact hidden={showWelcome}/>
     <footer className="workspace-footer no-print">
       <div className="workspace-footer-brand">
         <strong>Little Paper Bookshop Studio</strong>
