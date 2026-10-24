@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import Image from "next/image";
 import { BookOpen, Download, Eye, EyeOff, Info, KeyRound, LogOut, Mail, Phone, RefreshCw, Search, ShieldCheck, Store, UserRound, Wifi, WifiOff, X } from "lucide-react";
 import { AppLanguageProvider, LanguageToggle, ThemeToggle, useAppLanguage } from "@/components/app-language";
 import { WelcomePopup, WhatsAppContact } from "@/components/bookshop-contact-widgets";
@@ -189,7 +190,7 @@ function GateContent({ children }: { children: ReactNode }) {
   if (!account) return <main className="auth-page" lang={language}>
     <div className="auth-orb auth-orb-one"/><div className="auth-orb auth-orb-two"/>
     <section className="auth-card">
-      <div className="auth-card-brand"><div className="auth-brand-icon"><BookOpen size={25}/><span/></div><div><strong>Little Paper</strong><small>BOOKSHOP STUDIO</small></div></div>
+      <div className="auth-card-brand"><div className="auth-brand-icon"><Image src="/bookshop-icon.svg" width={43} height={43} alt="" aria-hidden="true"/></div><div><strong>PaperBloom</strong><small>STATIONERY · CREATIVE STUDIO</small></div></div>
       <div className="auth-welcome"><span className="auth-eyebrow"><ShieldCheck size={14}/> LOCAL BOOKSHOP WORKSPACE</span><h1>{text.welcome}</h1><p>{text.intro}</p></div>
       <form className="auth-form" onSubmit={onLogin}>
         <label>{text.username}<span className="auth-input-wrap"><UserRound size={17}/><input autoComplete="username" autoFocus required value={username} onChange={event => setUsername(event.target.value)} placeholder={language === "si" ? "ඔබගේ පරිශීලක නාමය" : "Enter your username"}/></span></label>
@@ -212,29 +213,35 @@ function GateContent({ children }: { children: ReactNode }) {
     {showAbout && <div className="auth-about-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setShowAbout(false); }}>
       <section className="auth-about-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-about-title">
         <button className="auth-about-close" type="button" onClick={() => setShowAbout(false)} aria-label={language === "si" ? "වසන්න" : "Close"}><X size={18}/></button>
-        <div className="auth-about-avatar"><BookOpen size={24}/></div>
+        <Image className="auth-about-logo" src="/nexora-labs-logo.svg" width={112} height={112} alt="Nexora Labs" unoptimized/>
         <span className="auth-eyebrow">{language === "si" ? "සංවර්ධකයා" : "DEVELOPER"}</span>
         <h2 id="auth-about-title">{language === "si" ? "මා ගැන" : "About me"}</h2>
-        <p className="auth-about-name">M.L Kavishka Sandaruwan</p>
+        <p className="auth-about-name">M.L.K Sandaruwan</p>
+        <p className="auth-about-copyright">© 2026 M.L.K Sandaruwan</p>
         <div className="auth-about-contacts">
           <a href="tel:0767660922"><Phone size={16}/>0767660922</a>
           <a href="mailto:kavishkasandaruwan68@gmail.com"><Mail size={16}/>kavishkasandaruwan68@gmail.com</a>
         </div>
-        <p className="auth-about-caption">{language === "si" ? "Little Paper Bookshop Studio හි නිර්මාතෘ සහ සංවර්ධක." : "Creator and developer of Little Paper Bookshop Studio."}</p>
+        <p className="auth-about-caption">{language === "si" ? "PaperBloom Stationery & Creative Studio හි නිර්මාණකරු සහ සංවර්ධක." : "Developed by M.L.K Sandaruwan for PaperBloom Stationery & Creative Studio."}</p>
       </section>
     </div>}
   </main>;
 
   return <div className="auth-app-shell">
-    <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><BookOpen size={16}/></div><span>Little Paper</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
+    <div className="auth-session-bar no-print"><div className="auth-session-brand"><div className="auth-session-icon"><Image src="/bookshop-icon.svg" width={29} height={29} alt="" aria-hidden="true"/></div><span>PaperBloom</span></div><div className="auth-session-info"><span className="auth-session-shop">{account.bookshopName}</span><span className="auth-session-user">{account.username}</span>{account.role === "admin" && <button className="auth-manage-link" onClick={() => setShowManager(true)}><ShieldCheck size={15}/>{text.manager}</button>}<button className="auth-logout" onClick={logout}><LogOut size={15}/>{text.logout}</button></div></div>
     <div className="auth-app-content">{showManager && account.role === "admin" ? <AccountManager language={language} onClose={() => setShowManager(false)}/> : children}</div>
     <WelcomePopup open={showWelcome} userName={account.username} onClose={() => setShowWelcome(false)}/>
     <WhatsAppContact hidden={showWelcome}/>
     <footer className="workspace-footer no-print">
       <div className="workspace-footer-brand">
-        <strong>Little Paper Bookshop Studio</strong>
-        <span>{language === "si" ? "නිර්මාණය සහ සංවර්ධනය" : "Created and developed by"}</span>
-        <b className="workspace-footer-developer">M.L Kavishka Sandaruwan</b>
+      <Image className="workspace-footer-logo" src="/bookshop-icon.svg" width={58} height={58} alt="PaperBloom" unoptimized/>
+        <div className="workspace-footer-brand-copy">
+        <strong>PaperBloom Stationery</strong>
+        <span className="workspace-footer-studio">CREATIVE STUDIO</span>
+        <span>{language === "si" ? "සංවර්ධනය කළේ" : "Developed by"}</span>
+        <b className="workspace-footer-developer">M.L.K Sandaruwan</b>
+          <small className="workspace-footer-copyright">© 2026 M.L.K Sandaruwan. All rights reserved.</small>
+        </div>
       </div>
       <div className="workspace-footer-contact"><a href="tel:0767660922"><Phone size={14}/>0767660922</a><a href="mailto:kavishkasandaruwan68@gmail.com"><Mail size={14}/>kavishkasandaruwan68@gmail.com</a></div>
       <div className="workspace-footer-terms">

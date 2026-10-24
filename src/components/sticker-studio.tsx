@@ -5,6 +5,7 @@ import {
   FileUser, Flower2, FolderHeart, Heart, Home, ImagePlus, Layers, LayoutGrid, Menu, Minus, Palette, Shapes,
   Plus, Printer, RotateCcw, Save, Search, Settings, Sparkles, Trash2, Upload, WandSparkles, X
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createStarterAsset, starterArtwork, starterTemplates, subjectPresets } from "@/data/templates";
 import { newDesignTemplateIds, newDesignTemplates } from "@/data/new-templates";
@@ -848,15 +849,16 @@ export function StickerStudio() {
     return <div className="space-y-8">
       <div className="hero-panel relative overflow-hidden rounded-[28px] p-8 md:p-10">
         <div className="relative z-10 max-w-[510px]">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-semibold text-[#8d5960]"><Sparkles size={14}/> MADE WITH A LITTLE EXTRA LOVE</div>
-          <h1 className="text-3xl font-bold leading-tight tracking-[-0.04em] md:text-[38px]">Little labels.<br/><span className="text-[#397b68]">Big school-day</span> smiles.</h1>
-          <p className="mt-3 max-w-md text-sm leading-6 text-[#756b70]">Make a name sticker that feels like theirs. Personal, colourful and ready to print in just a few clicks.</p>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 text-xs font-semibold text-[#8d5960]"><Sparkles size={14}/> PAPERBLOOM · STATIONERY &amp; CREATIVE STUDIO</div>
+          <h1 className="text-3xl font-bold leading-tight tracking-[-0.04em] md:text-[38px]">පුංචි නමක්,<br/><span className="text-[#397b68]">ලස්සන මතකයක්! 🌈</span></h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-[#756b70]">ඔබේ දරුවාගේ නමින්ම හැඩවුණු වර්ණවත් ලේබල් සහ ස්ටිකර්. ආදරයෙන් නිර්මාණය කර, මුද්‍රණයට සූදානම් කළ පුංචි ලස්සනක්!</p>
+          <p className="mt-3 max-w-md text-xs font-semibold leading-5 text-[#397b68]">PaperBloom | ඔබේ සිතුවිලිවලට ලස්සන හැඩයක්. 🌸</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button className="primary-button" onClick={() => { setKind("sticker"); changeSection("Create sticker"); }}><Sparkles size={16}/> Create new sticker <ArrowRight size={15}/></button>
             <button className="secondary-button" onClick={() => { setKind("cover"); setSelectedTemplateId("cover-rose-garden"); changeSection("Create sticker"); }}><BookOpen size={16}/> Create cover label</button>
           </div>
         </div>
-        <div className="hero-art" aria-hidden="true"><div className="hero-sun">✿</div><div className="hero-sticker"><span>✦</span><b>hello!</b><small>MY SCHOOL THINGS</small></div><div className="hero-star">✷</div><div className="hero-pencil">✎</div></div>
+        <div className="hero-art" aria-hidden="true"><div className="hero-sun">✿</div><div className="hero-sticker"><span>✦</span><Image className="hero-sticker-logo" src="/bookshop-icon.svg" width={30} height={30} unoptimized alt=""/><b>PaperBloom</b><small>STATIONERY · CREATIVE</small></div><div className="hero-star">✷</div><div className="hero-pencil">✎</div></div>
       </div>
       <div className="grid gap-7 xl:grid-cols-[1fr_300px]">
         <section>
@@ -1173,9 +1175,9 @@ export function StickerStudio() {
   }
 
   return <LocalizedUi><div className="studio-shell">
-    <aside className={`sidebar no-print ${isMobileNavOpen ? "mobile-open" : ""}`}><div className="brand"><div className="brand-mark"><span>✿</span></div><div><b>little paper</b><small>STICKER STUDIO</small></div><button className="mobile-close" onClick={() => setMobileNavOpen(false)}><X size={18}/></button></div>
+    <aside className={`sidebar no-print ${isMobileNavOpen ? "mobile-open" : ""}`}><div className="brand"><div className="brand-mark"><img src="/bookshop-icon.svg" alt=""/></div><div><b>PaperBloom</b><small>CREATIVE STUDIO</small></div><button className="mobile-close" onClick={() => setMobileNavOpen(false)}><X size={18}/></button></div>
       <nav className="sidebar-nav" aria-label="Main navigation">{navGroups.map(group => <div className="nav-group" key={group.label}><div className="sidebar-label">{group.label}</div>{group.items.map(({ title, icon: Icon }) => <button key={title} className={`nav-item ${section === title ? "active" : ""}`} aria-current={section === title ? "page" : undefined} onClick={() => changeSection(title)}><Icon size={17} strokeWidth={1.8}/><span>{title}</span>{title === "Recent designs" && sortedRecent.length > 0 && <small>{sortedRecent.length}</small>}</button>)}</div>)}</nav>
-      <div className="sidebar-bottom"><div className="offline-badge"><span/> Works offline on this device</div><div className="profile-card"><div className="profile-avatar">L</div><div><b>Local workspace</b><small>Just for your bookshop</small></div><Settings size={15}/></div><div className="version">Little Paper Studio · 1.0</div></div>
+      <div className="sidebar-bottom"><div className="offline-badge"><span/> Works offline on this device</div><div className="profile-card"><div className="profile-avatar"><img src="/bookshop-icon.svg" alt="" aria-hidden="true"/></div><div><b>PaperBloom</b><small>CREATIVE STUDIO</small></div><Settings size={15}/></div><div className="version">PaperBloom Studio · 1.0</div></div>
     </aside>
     {isMobileNavOpen && <button aria-label="Close menu" className="mobile-overlay" onClick={() => setMobileNavOpen(false)}/>}
     <main className="main-column"><header className="topbar no-print"><div className="flex min-w-0 items-center gap-3"><button className="menu-button" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={19}/></button><div className="breadcrumb truncate">Your bookshop <span>/</span> <b>{section}</b></div></div><div className="flex items-center gap-3"><span className="saved-indicator"><span/> Everything stays on this device</span><ThemeToggle/><LanguageToggle/><button className="top-new" onClick={() => { setDesign(null); setGeneratedBatch([]); changeSection("Create sticker"); }}><Plus size={15}/> New design</button></div></header>

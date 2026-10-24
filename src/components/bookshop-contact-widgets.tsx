@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { BookOpen, Check, CircleHelp, Lightbulb, MessageCircle, Phone, Rocket, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bookshopWelcomeInfo } from "@/data/bookshop-welcome";
@@ -64,10 +65,10 @@ export function WelcomePopup({ open, userName, onClose }: { open: boolean; userN
       <div className="bookshop-welcome-scroll">
         <button className="bookshop-modal-close" type="button" aria-label="පිළිගැනීමේ තොරතුරු වසන්න" onClick={onClose}><X size={18}/></button>
         <div className="bookshop-welcome-art" aria-hidden="true">
-          <span className="bookshop-welcome-book"><BookOpen size={31}/></span>
+          <span className="bookshop-welcome-book"><Image src="/bookshop-icon.svg" width={54} height={54} alt=""/></span>
           <span className="bookshop-welcome-sparkle"><Sparkles size={18}/></span>
         </div>
-        <p className="bookshop-dialog-eyebrow">LITTLE PAPER BOOKSHOP STUDIO</p>
+        <p className="bookshop-dialog-eyebrow">PAPERBLOOM STATIONERY · CREATIVE STUDIO</p>
         <h2 id="bookshop-welcome-title">අපගේ Bookshop Application එකට සාදරයෙන් පිළිගනිමු! 🎉</h2>
         <p className="bookshop-welcome-user">ආයුබෝවන්, {userName}.</p>
         <p id="bookshop-welcome-message" className="bookshop-welcome-message">ඔබේ වැඩ පහසු කරන, කාලය ඉතිරි කරන නවීන ඩිජිටල් සහායකයෙක්.</p>

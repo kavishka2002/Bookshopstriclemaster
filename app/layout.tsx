@@ -34,12 +34,12 @@ import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 
 export const metadata: Metadata = {
-  title: "Little Paper | Bookshop Studio",
-  description: "An offline-ready local workspace for bookshop stationery and print design.",
+  title: "PaperBloom | Stationery & Creative Studio",
+  description: "PaperBloom stationery, printable designs, and creative templates.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/bookshop-icon.svg", apple: "/bookshop-icon.svg" }
 };
-export const viewport: Viewport = { themeColor: "#315f54" };
+export const viewport: Viewport = { themeColor: "#214d3d" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

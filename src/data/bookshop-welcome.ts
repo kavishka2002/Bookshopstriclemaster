@@ -1,5 +1,5 @@
 export const bookshopWelcomeInfo = {
-  creatorName: "M.L Kavishka Sandaruwan",
+  creatorName: "M.L.K Sandaruwan",
   phoneDisplay: "076 766 0922",
   phoneHref: "tel:+94767660922",
   whatsappHref: "https://wa.me/94767660922",

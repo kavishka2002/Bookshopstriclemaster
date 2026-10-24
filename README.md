@@ -1,4 +1,4 @@
-# Little Paper Sticker Studio
+# PaperBloom Stationery & Creative Studio
 
 A local-first Next.js app for creating Sri Lankan school name stickers and notebook cover labels. Sign-in accounts and each bookshop's designs, templates, and uploaded images stay in separate local browser storage; no cloud service is used.
 
