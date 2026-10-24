@@ -10,8 +10,10 @@ export type EnglishFontFamily =
   | "Playfair Display"
   | "Fredoka"
   | "Baloo 2"
-  | "Roboto";
-export type SinhalaFontFamily = "Noto Sans Sinhala" | "Noto Serif Sinhala" | "Abhaya Libre";
+  | "Roboto"
+  | "Lora"
+  | "DM Sans";
+export type SinhalaFontFamily = "Noto Sans Sinhala" | "Noto Serif Sinhala" | "Abhaya Libre" | "Gemunu Libre" | "Yaldevi";
 export type FontWeight = 400 | 500 | 600 | 700;
 export type BorderStyle = "solid" | "dashed" | "dotted";
 export type AssetCategory = "Cartoon" | "Flowers" | "Animals" | "Nature" | "School" | "Sports" | "Space" | "Custom";

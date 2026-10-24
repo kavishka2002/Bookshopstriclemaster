@@ -13,7 +13,9 @@ export const englishFonts: Array<{
   { family: "Roboto", category: "Simple and readable" },
   { family: "Nunito", category: "Rounded and friendly" },
   { family: "Quicksand", category: "Rounded and friendly" },
-  { family: "Playfair Display", category: "Elegant" }
+  { family: "Playfair Display", category: "Elegant" },
+  { family: "Lora", category: "Elegant" },
+  { family: "DM Sans", category: "Modern and professional" }
 ];
 
 export const sinhalaFonts: Array<{
@@ -22,7 +24,9 @@ export const sinhalaFonts: Array<{
 }> = [
   { family: "Noto Sans Sinhala", category: "Simple and readable" },
   { family: "Noto Serif Sinhala", category: "Elegant" },
-  { family: "Abhaya Libre", category: "Elegant" }
+  { family: "Abhaya Libre", category: "Elegant" },
+  { family: "Gemunu Libre", category: "Cute and playful" },
+  { family: "Yaldevi", category: "Modern and professional" }
 ];
 
 export const fontCategories = [

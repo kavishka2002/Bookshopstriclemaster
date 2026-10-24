@@ -1676,6 +1676,7 @@ button { cursor: pointer; }
   html[data-theme="dark"] .bg-white,
   html[data-theme="dark"] .bg-slate-50,
   html[data-theme="dark"] .bg-gray-50 { background-color: #1a2325 !important; }
+  html[data-theme="dark"] .sticker-font-controls { border-color: #354345; background-color: #202b2c; }
   html[data-theme="dark"] .tip-card { border-color: #514536; background: #2b2922; color: #d0c2a6; }
   html[data-theme="dark"] .status-message { background: #243b32; color: #a6d9bb; }
   html[data-theme="dark"] .status-error { background: #3b2525; color: #f0aaa5; }

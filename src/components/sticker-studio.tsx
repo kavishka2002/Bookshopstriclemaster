@@ -188,6 +188,7 @@ export function StickerStudio() {
   const [printPage, setPrintPage] = useState(0);
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const stickerTextInputRef = useRef<HTMLTextAreaElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preferencesLoaded = useRef(false);
   const dragRef = useRef<{ id: string; type: "text" | "image"; startX: number; startY: number; originX: number; originY: number } | null>(null);
@@ -413,6 +414,32 @@ export function StickerStudio() {
       texts: previousCustomCount === nextCustomCount ? updatedTexts : reflowForCustomFields(updatedTexts),
       ...(selectedSubjects ? { printSubjects: selectedSubjects } : {})
     });
+  };
+  const updateStickerTextInput = (text: TextElement, nextValue: string, selectionStart: number, isComposing = false) => {
+    const draftKey = `sticker:${text.id}`;
+    if (typingMode !== "Singlish to Sinhala" || transliterationStatus !== "ready") {
+      transliterationDrafts.current[draftKey] = { rawValue: nextValue, displayedValue: nextValue };
+      updateText(text.id, { text: nextValue, ...(!text.text.trim() ? { visible: !!nextValue.trim() } : {}) });
+      return;
+    }
+
+    const currentDraft = transliterationDrafts.current[draftKey] ?? { rawValue: text.text, displayedValue: text.text };
+    if (isComposing) {
+      transliterationDrafts.current[draftKey] = { rawValue: nextValue, displayedValue: nextValue };
+      updateText(text.id, { text: nextValue, ...(!text.text.trim() ? { visible: !!nextValue.trim() } : {}) });
+      return;
+    }
+
+    const result = updateLiveTransliterationDraft(currentDraft, nextValue, selectionStart);
+    transliterationDrafts.current[draftKey] = result.draft;
+    updateText(text.id, { text: result.draft.displayedValue, ...(!text.text.trim() ? { visible: !!result.draft.displayedValue.trim() } : {}) });
+    requestAnimationFrame(() => {
+      const input = stickerTextInputRef.current;
+      if (input && document.activeElement === input) input.setSelectionRange(result.caret, result.caret);
+    });
+  };
+  const beginStickerTextInput = (text: TextElement) => {
+    transliterationDrafts.current[`sticker:${text.id}`] = { rawValue: text.text, displayedValue: text.text };
   };
   const addCustomText = () => {
     if (!design) return;
@@ -983,8 +1010,10 @@ export function StickerStudio() {
               {design.texts.map(t => <button key={t.id} onClick={() => setSelectedText(t.id)} className={`field-tab ${selectedText === t.id || selectedText === t.field ? "chosen" : ""}`}>{t.field === "custom" ? t.customLabel || "Custom text" : t.field[0].toUpperCase() + t.field.slice(1)}{t.visible ? "" : " · hidden"}</button>)}
               {text && <><label className="field-label mt-2 block">Show on sticker<input type="checkbox" className="ml-2 align-middle accent-[#397b68]" checked={text.visible} onChange={e => updateText(text.id, { visible: e.target.checked })}/></label>
                 {text.field === "custom" && <div><label className="field-label block">Field label<input className="text-input mt-2" value={text.customLabel ?? ""} placeholder="e.g. Student ID" onChange={e => updateText(text.id, { customLabel: e.target.value })}/></label><button className="mt-2 text-[10px] font-semibold text-rose-600 hover:underline" onClick={() => removeCustomText(text.id)}>Remove this extra field</button></div>}
-                <label className="field-label block">Displayed text<textarea lang="auto" dir="auto" spellCheck={false} autoCapitalize="off" autoCorrect="off" className="text-input mt-2 min-h-16 resize-y" style={{ fontFamily: textFontStack(text.fontFamily, text.sinhalaFontFamily), fontWeight: resolvedFontWeight(text) }} value={text.text} onChange={e => updateText(text.id, { text: e.target.value, ...(!text.text.trim() ? { visible: !!e.target.value.trim() } : {}) })}/></label>
-                <div className="space-y-3 rounded-xl border border-[#eee9e2] bg-[#fffdfa] p-3">
+                <label className="field-label block">Text input mode<select className="text-input mt-2" value={typingMode} onChange={event => { setTypingMode(event.target.value as TextInputMode); beginStickerTextInput(text); }}><option value="English">English</option><option value="Sinhala Keyboard">Sinhala Keyboard</option><option value="Singlish to Sinhala" disabled={transliterationStatus !== "ready"}>Singlish to Sinhala{transliterationStatus === "loading" ? " · loading" : transliterationStatus === "error" ? " · unavailable" : ""}</option></select></label>
+                <p className="mt-2 text-[10px] leading-5 text-slate-500">{typingMode === "Singlish to Sinhala" ? "Type Singlish to convert as you type. Existing Sinhala text stays as entered." : typingMode === "Sinhala Keyboard" ? "Type Sinhala with your device's Sinhala keyboard or input method." : "Type English, or paste Sinhala text directly."}</p>
+                <label className="field-label block">Displayed text<textarea ref={stickerTextInputRef} lang={typingMode === "English" ? "en" : "si"} dir="auto" spellCheck={false} autoCapitalize="off" autoCorrect="off" className="text-input mt-2 min-h-16 resize-y" style={{ fontFamily: textFontStack(text.fontFamily, text.sinhalaFontFamily), fontWeight: resolvedFontWeight(text) }} value={text.text} onFocus={() => beginStickerTextInput(text)} onCompositionStart={() => composingStudentFields.current.add(`sticker:${text.id}`)} onCompositionEnd={event => { const key = `sticker:${text.id}`; composingStudentFields.current.delete(key); updateStickerTextInput(text, event.currentTarget.value, event.currentTarget.selectionStart); }} onChange={event => updateStickerTextInput(text, event.target.value, event.target.selectionStart, composingStudentFields.current.has(`sticker:${text.id}`))}/></label>
+                <div className="sticker-font-controls space-y-3 rounded-xl border border-[#eee9e2] bg-[#fffdfa] p-3">
                   <label className="field-label block">English font<select className="text-input mt-2" value={text.fontFamily} onChange={e => updateText(text.id, { fontFamily: e.target.value as EnglishFontFamily })}>{fontCategories.map(category => <optgroup key={category} label={category}>{englishFonts.filter(font => font.category === category).map(font => <option key={font.family} value={font.family}>{font.family}</option>)}</optgroup>)}</select></label>
                   <div className="rounded-lg bg-white p-2 text-sm" style={{ fontFamily: `"${text.fontFamily}", sans-serif` }}>{fontPreviewText.english}</div>
                   <label className="field-label block">Sinhala font<select className="text-input mt-2" value={text.sinhalaFontFamily ?? "Noto Sans Sinhala"} onChange={e => updateText(text.id, { sinhalaFontFamily: e.target.value as SinhalaFontFamily })}>{fontCategories.map(category => <optgroup key={category} label={category}>{sinhalaFonts.filter(font => font.category === category).map(font => <option key={font.family} value={font.family}>{font.family}</option>)}</optgroup>)}</select></label>

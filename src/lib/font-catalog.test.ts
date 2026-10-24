@@ -3,8 +3,8 @@ import { englishFonts, fontCategories, fontPreviewText, normalizeFontSelection, 
 
 describe("local font catalog", () => {
   it("offers the requested English and Sinhala families across the listed categories", () => {
-    expect(englishFonts.map(font => font.family)).toHaveLength(10);
-    expect(sinhalaFonts.map(font => font.family)).toEqual(["Noto Sans Sinhala", "Noto Serif Sinhala", "Abhaya Libre"]);
+    expect(englishFonts.map(font => font.family)).toHaveLength(12);
+    expect(sinhalaFonts.map(font => font.family)).toEqual(["Noto Sans Sinhala", "Noto Serif Sinhala", "Abhaya Libre", "Gemunu Libre", "Yaldevi"]);
     expect(new Set(englishFonts.map(font => font.category))).toEqual(new Set(fontCategories));
     expect(fontPreviewText.sinhala).toContain("ශ්‍රී ලංකාව");
     expect(fontPreviewText.sinhala).toContain("ක්‍රියාකාරකම්");
