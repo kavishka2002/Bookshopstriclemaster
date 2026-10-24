@@ -1,4 +1,4 @@
-const CACHE_NAME = "little-paper-shell-v1";
+const CACHE_NAME = "little-paper-shell-v2";
 const ROOT_URL = "/";
 
 self.addEventListener("install", event => {
@@ -26,7 +26,18 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key.startsWith("little-paper-shell-") && key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(async keys => {
+        const cache = await caches.open(CACHE_NAME);
+        const previousCaches = keys.filter(key => key.startsWith("little-paper-shell-") && key !== CACHE_NAME);
+        await Promise.all(previousCaches.map(async key => {
+          const previousCache = await caches.open(key);
+          const previousCatalog = await previousCache.match("/api/coloring-sheets");
+          if (previousCatalog && !await cache.match("/api/coloring-sheets")) {
+            await cache.put("/api/coloring-sheets", previousCatalog);
+          }
+          await caches.delete(key);
+        }));
+      })
       .then(() => self.clients.claim())
   );
 });
@@ -59,9 +70,26 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  if (url.pathname === "/api/coloring-sheets") {
+    event.respondWith(
+      fetch(request).then(async response => {
+        if (response.ok) {
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(request, response.clone());
+          } catch (error) {
+            console.warn("Could not update the cached coloring catalog.", error);
+          }
+        }
+        return response;
+      }).catch(async () => (await caches.match(request)) || Response.error())
+    );
+    return;
+  }
+
   if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/starter-art/") ||
       url.pathname === "/bookshop-icon.svg" || url.pathname === "/singlish_core_bg.wasm" ||
-      url.pathname === "/api/coloring-sheets" || decodedPath.startsWith("/පින්තුර/")) {
+      decodedPath.startsWith("/පින්තුර/")) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
