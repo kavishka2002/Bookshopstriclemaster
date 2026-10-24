@@ -338,13 +338,13 @@ export function ColoringSheetLibrary() {
               </div>
               <div className="p-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b927e]">{categoryName(sheet.category)}</span>
-                <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-slate-700">{sheet.sinhalaName}</h3>
-                <p className="truncate text-xs text-slate-500" title={sheet.englishName}>{sheet.englishName}</p>
-                <p className="mt-1 text-[11px] text-slate-400">PDF · {formatFileSize(sheet.sizeBytes)}</p>
+                <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-slate-700">{sheet.grade !== null ? sheet.englishName : sheet.sinhalaName}</h3>
+                {sheet.grade === null && <p className="truncate text-xs text-slate-500" title={sheet.englishName}>{sheet.englishName}</p>}
+                <p className="mt-1 text-[11px] text-slate-400">{sheet.mediaType === "pdf" ? "PDF" : "Image"} · {formatFileSize(sheet.sizeBytes)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button className="small-action flex-1" onClick={() => openPreview(sheet)}><BookOpen size={13}/> Preview</button>
                   <button className="small-action flex-1" onClick={() => openForPrint(sheet)}><Printer size={13}/> Print</button>
-                  <a className="small-action flex-1" href={sheet.url} download><Download size={13}/> Save PDF</a>
+                  <a className="small-action flex-1" href={sheet.url} download><Download size={13}/> Save {sheet.mediaType === "pdf" ? "PDF" : "image"}</a>
                 </div>
               </div>
             </article>)}

@@ -45,6 +45,21 @@ const gradeTitles: Record<number, Record<number, { sinhala: string; transliterat
     14: { sinhala: "වැඩ කරන අය සහ උපකරණ", transliteration: "wada karana aya saha upakarana" },
     15: { sinhala: "පරිසරයේ වෙනස් තැන්", transliteration: "parisaraye wens than" },
     16: { sinhala: "අපේ උදව් ඕනෑ අය", transliteration: "ape udau ona aya" }
+  },
+  2: {
+    1: { sinhala: "පාසල - අපේ පාසලේ ස්ථාන", transliteration: "pasala ape pasale sthana" },
+    2: { sinhala: "නිවස - අපේ ගෙදර", transliteration: "niwasa ape gedara" },
+    3: { sinhala: "වත්තට එන සතුන්", transliteration: "waththata ena sathun" },
+    4: { sinhala: "ජලය සහ දෛනික ජීවිතය", transliteration: "jalaya saha dainika jeevithaya" },
+    5: { sinhala: "අවුරුදු කාලය", transliteration: "awurudu kalaya" },
+    6: { sinhala: "අපට පෙනෙන අහස", transliteration: "apata penena ahasa" },
+    7: { sinhala: "අප කන බොන දේ", transliteration: "apa kana bona de" },
+    8: { sinhala: "අපට තොරතුරු ලැබෙන ආකාරය", transliteration: "apata thorathuru labena akaraya" },
+    9: { sinhala: "පරිසරයේ සිදුවන වෙනස්කම්", transliteration: "parisaraye siduwana wenas kam" },
+    11: { sinhala: "අපට ඕනෑ දේ ලැබෙන හැටි", transliteration: "apata one de labena hati" },
+    12: { sinhala: "ගමන් බිමන්", transliteration: "gaman biman" },
+    14: { sinhala: "මිනිසුන් වැඩ කරන තැන්", transliteration: "minisun wada karana than" },
+    15: { sinhala: "අපේ උදව් ඕනෑ අය", transliteration: "ape udau ona aya" }
   }
 };
 
@@ -130,14 +145,15 @@ export function createGradeColoringSheet(filePath: string, url: string, sizeByte
   const titleTransliteration = title?.transliteration ?? match[3].replace(/^Title\s+\d+\s*/i, "").trim();
   const titleSinhala = title?.sinhala ?? titleTransliteration;
   const filename = filePath.split("/").at(-1)?.replace(/\.(png|jpe?g|webp|pdf)$/i, "") ?? sheet.sinhalaName;
+  const englishName = filename.replace(/[-_]+/g, " ").replace(/\b[a-z]/g, character => character.toLocaleUpperCase("en-US"));
   return {
     ...sheet,
     grade,
     titleOrder,
     titleSinhala,
     titleTransliteration,
-    englishName: filename,
-    keywords: [...new Set([...sheet.keywords, filePath, titleSinhala, titleTransliteration, filename])]
+    englishName,
+    keywords: [...new Set([...sheet.keywords, filePath, titleSinhala, titleTransliteration, filename, englishName])]
   };
 }
 

@@ -40,4 +40,14 @@ describe("colouring sheet catalogue and search", () => {
     expect(searchColoringSheets([titleThree], "සතුන්")).toHaveLength(1);
     expect(sortColoringSheets([titleThree, titleOne], "curriculum").map(sheet => sheet.titleOrder)).toEqual([1, 3]);
   });
+
+  it("recognizes Grade 2 lessons, Sinhala titles, and romanized search", () => {
+    const school = createGradeColoringSheet("grade 2/Title 1 pasala ape pasale sthana/school-places.png", "/grade%202/school-places.png", 500);
+    const home = createGradeColoringSheet("grade 2/Title 2 niwasa ape gedara/family-homes.png", "/grade%202/family-homes.png", 500);
+
+    expect(school).toMatchObject({ grade: 2, titleOrder: 1, titleSinhala: "පාසල - අපේ පාසලේ ස්ථාන" });
+    expect(searchColoringSheets([school], "pasala ape pasale sthana")).toHaveLength(1);
+    expect(searchColoringSheets([school], "පාසල")).toHaveLength(1);
+    expect(sortColoringSheets([home, school], "curriculum").map(sheet => sheet.titleOrder)).toEqual([1, 2]);
+  });
 });
