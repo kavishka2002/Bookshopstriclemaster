@@ -2,7 +2,7 @@
 
 import {
   ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, Copy, Download, FileImage, Files,
-  FileUser, Flower2, FolderHeart, Heart, Home, ImagePlus, Layers, LayoutGrid, Menu, Minus, Palette, Shapes,
+  FileText, FileUser, Flower2, FolderHeart, Heart, Home, ImagePlus, Layers, LayoutGrid, Menu, Minus, Palette, Shapes,
   Plus, Printer, RotateCcw, Save, Search, Settings, Sparkles, Trash2, Upload, WandSparkles, X
 } from "lucide-react";
 import Image from "next/image";
@@ -27,15 +27,17 @@ import { CustomPrintStudio } from "@/components/custom-print-studio";
 import { PastPaperFinder } from "@/components/past-paper-finder";
 import { ColoringSheetLibrary } from "@/components/coloring-sheet-library";
 import { CvBuilder } from "@/components/cv-builder";
+import { DocumentLibrary } from "@/components/document-library";
 import { LanguageToggle, LocalizedUi, ThemeToggle } from "@/components/app-language";
 import { AppToast } from "@/components/app-toast";
 import { useAppDialog } from "@/components/app-dialog";
+import { useTrialAccess } from "@/components/trial-access";
 import type { AssetCategory, DesignImage, EnglishFontFamily, ImageAsset, LanguageMode, MeasurementUnit, SinhalaFontFamily, StickerDesign, StickerTemplate, TextElement, TextInputMode } from "@/types";
 
-type Section = "Home" | "Create sticker" | "Templates" | "Recent designs" | "Saved designs" | "PNG assets" | "Past Paper Finder" | "Picture Colouring Library" | "CV Builder" | "A4 print studio" | "Custom Print Studio" | "Settings";
+type Section = "Home" | "Create sticker" | "Templates" | "Recent designs" | "Saved designs" | "PNG assets" | "Past Paper Finder" | "Picture Colouring Library" | "CV Builder" | "Documents & Forms" | "A4 print studio" | "Custom Print Studio" | "Settings";
 const navGroups: Array<{ label: string; items: Array<{ title: Section; icon: typeof Home }> }> = [
   { label: "Workspace", items: [{ title: "Home", icon: Home }, { title: "Create sticker", icon: Sparkles }, { title: "Templates", icon: LayoutGrid }] },
-  { label: "Your library", items: [{ title: "Recent designs", icon: RotateCcw }, { title: "Saved designs", icon: FolderHeart }, { title: "PNG assets", icon: FileImage }, { title: "Picture Colouring Library", icon: ImagePlus }, { title: "Past Paper Finder", icon: Files }, { title: "CV Builder", icon: FileUser }] },
+  { label: "Your library", items: [{ title: "Recent designs", icon: RotateCcw }, { title: "Saved designs", icon: FolderHeart }, { title: "PNG assets", icon: FileImage }, { title: "Picture Colouring Library", icon: ImagePlus }, { title: "Past Paper Finder", icon: Files }, { title: "CV Builder", icon: FileUser }, { title: "Documents & Forms", icon: FileText }] },
   { label: "Production", items: [{ title: "A4 print studio", icon: Printer }, { title: "Custom Print Studio", icon: Shapes }] },
   { label: "Preferences", items: [{ title: "Settings", icon: Settings }] }
 ];
@@ -149,6 +151,7 @@ async function loadStarterAssets(existingAssets: ImageAsset[]): Promise<ImageAss
 
 export function StickerStudio() {
   const { confirm, prompt, host: dialogHost } = useAppDialog();
+  const isTrial = useTrialAccess();
   const [section, setSection] = useState<Section>("Home");
   const [templates, setTemplates] = useState<StickerTemplate[]>([]);
   const [templateCollection, setTemplateCollection] = useState<"existing" | "new">("existing");
@@ -838,9 +841,12 @@ export function StickerStudio() {
     if (section === "PNG assets") return AssetLibrary();
     if (section === "A4 print studio") return design ? PrintStudio() : EmptyPanel({ title: "Open a design to start printing", text: "Create or open a saved sticker first, then choose A4 Print Studio.", action: () => changeSection("Create sticker") });
     if (section === "Custom Print Studio") return <CustomPrintStudio assets={assets} assetUrls={assetUrls} onUpload={onUpload}/>;
-    if (section === "Past Paper Finder") return <PastPaperFinder/>;
+    if (section === "Past Paper Finder") return isTrial
+      ? <div className="empty-large"><div className="empty-illustration"><Files size={28}/></div><h3>Past papers require full access</h3><p>Past Paper Finder is not available in the free trial.</p></div>
+      : <PastPaperFinder/>;
     if (section === "Picture Colouring Library") return <ColoringSheetLibrary/>;
     if (section === "CV Builder") return <CvBuilder/>;
+    if (section === "Documents & Forms") return <DocumentLibrary/>;
     if (section === "Recent designs") return DesignList({ title: "Recent designs", items: sortedRecent, empty: "Your latest designs will appear here as you create and save them." });
     if (section === "Saved designs") return DesignList({ title: "Saved designs", items: designs, empty: "No designs saved yet. Create your first sticker and it will be saved on this device." });
     if (section === "Settings") return SettingsPanel();
@@ -856,8 +862,8 @@ export function StickerStudio() {
           <p className="mt-3 max-w-md text-sm leading-6 text-[#756b70]">ඔබේ දරුවාගේ නමින්ම හැඩවුණු වර්ණවත් ලේබල් සහ ස්ටිකර්. ආදරයෙන් නිර්මාණය කර, මුද්‍රණයට සූදානම් කළ පුංචි ලස්සනක්!</p>
           <p className="mt-3 max-w-md text-xs font-semibold leading-5 text-[#397b68]">PaperBloom | ඔබේ සිතුවිලිවලට ලස්සන හැඩයක්. 🌸</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <button className="primary-button" onClick={() => { setKind("sticker"); changeSection("Create sticker"); }}><Sparkles size={16}/> Create new sticker <ArrowRight size={15}/></button>
-            <button className="secondary-button" onClick={() => { setKind("cover"); setSelectedTemplateId("cover-rose-garden"); changeSection("Create sticker"); }}><BookOpen size={16}/> Create cover label</button>
+            <button className="primary-button" data-trial-allow onClick={() => { setKind("sticker"); changeSection("Create sticker"); }}><Sparkles size={16}/> Create new sticker <ArrowRight size={15}/></button>
+            <button className="secondary-button" data-trial-allow onClick={() => { setKind("cover"); setSelectedTemplateId("cover-rose-garden"); changeSection("Create sticker"); }}><BookOpen size={16}/> Create cover label</button>
           </div>
         </div>
         <div className="hero-art" aria-hidden="true"><div className="hero-sun">✿</div><div className="hero-sticker"><span>✦</span><Image className="hero-sticker-logo" src="/bookshop-icon.svg" width={30} height={30} unoptimized alt=""/><b>PaperBloom</b><small>STATIONERY · CREATIVE</small></div><div className="hero-star">✷</div><div className="hero-pencil">✎</div></div>
@@ -1181,12 +1187,12 @@ export function StickerStudio() {
 
   return <LocalizedUi><div className="studio-shell">
     <aside className={`sidebar no-print ${isMobileNavOpen ? "mobile-open" : ""}`}><div className="brand"><div className="brand-mark"><img src="/bookshop-icon.svg" alt=""/></div><div><b>PaperBloom</b><small>CREATIVE STUDIO</small></div><button className="mobile-close" data-trial-allow onClick={() => setMobileNavOpen(false)}><X size={18}/></button></div>
-      <nav className="sidebar-nav" aria-label="Main navigation">{navGroups.map(group => <div className="nav-group" key={group.label}><div className="sidebar-label">{group.label}</div>{group.items.map(({ title, icon: Icon }) => <button key={title} data-trial-allow className={`nav-item ${section === title ? "active" : ""}`} aria-current={section === title ? "page" : undefined} onClick={() => changeSection(title)}><Icon size={17} strokeWidth={1.8}/><span>{title}</span>{title === "Recent designs" && sortedRecent.length > 0 && <small>{sortedRecent.length}</small>}</button>)}</div>)}</nav>
+      <nav className="sidebar-nav" aria-label="Main navigation">{navGroups.map(group => <div className="nav-group" key={group.label}><div className="sidebar-label">{group.label}</div>{group.items.map(({ title, icon: Icon }) => <button key={title} {...(title === "Past Paper Finder" && isTrial ? { "data-paid-feature": true, title: "Full access required" } : { "data-trial-allow": true })} className={`nav-item ${section === title ? "active" : ""}`} aria-current={section === title ? "page" : undefined} onClick={() => changeSection(title)}><Icon size={17} strokeWidth={1.8}/><span>{title}</span>{title === "Recent designs" && sortedRecent.length > 0 && <small>{sortedRecent.length}</small>}</button>)}</div>)}</nav>
       <div className="sidebar-bottom"><div className="offline-badge"><span/> Works offline on this device</div><div className="profile-card"><div className="profile-avatar"><img src="/bookshop-icon.svg" alt="" aria-hidden="true"/></div><div><b>PaperBloom</b><small>CREATIVE STUDIO</small></div><Settings size={15}/></div><div className="version">PaperBloom Studio · 1.0</div></div>
     </aside>
     {isMobileNavOpen && <button aria-label="Close menu" data-trial-allow className="mobile-overlay" onClick={() => setMobileNavOpen(false)}/>}
-    <main className="main-column"><header className="topbar no-print"><div className="flex min-w-0 items-center gap-3"><button className="menu-button" data-trial-allow aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={19}/></button><div className="breadcrumb truncate">Your bookshop <span>/</span> <b>{section}</b></div></div><div className="flex items-center gap-3"><span className="saved-indicator"><span/> Everything stays on this device</span><ThemeToggle/><LanguageToggle/><button className="top-new" onClick={() => { setDesign(null); setGeneratedBatch([]); changeSection("Create sticker"); }}><Plus size={15}/> New design</button></div></header>
-      <div className="main-content">{content()}</div>
+    <main className="main-column"><header className="topbar no-print"><div className="flex min-w-0 items-center gap-3"><button className="menu-button" data-trial-allow aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={19}/></button><div className="breadcrumb truncate">Your bookshop <span>/</span> <b>{section}</b></div></div><div className="flex items-center gap-3"><span className="saved-indicator"><span/> Everything stays on this device</span><ThemeToggle/><LanguageToggle/><button className="top-new" data-trial-allow onClick={() => { setDesign(null); setGeneratedBatch([]); changeSection("Create sticker"); }}><Plus size={15}/> New design</button></div></header>
+      <div className="main-content" data-trial-allow={isTrial && section === "Create sticker" ? "" : undefined}>{isTrial && section === "Create sticker" && <p className="mb-4 rounded-xl border border-[#e5dced] bg-[#fbf9ff] px-4 py-3 text-xs leading-5 text-[#66558b]">Free trial: create and preview name stickers. Printing and Past Paper Finder require full access.</p>}{content()}</div>
       <div className="app-toast-stack no-print">
         {error && <AppToast key={`error-${error}`} variant="error" message={error} onClose={() => setError("")}/>}
         {message && <AppToast key={`success-${message}`} variant="success" message={message} onClose={() => setMessage("")}/>}

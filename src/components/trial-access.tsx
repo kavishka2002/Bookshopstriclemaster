@@ -115,12 +115,12 @@ export function TrialAccessBoundary({ enabled, children }: { enabled: boolean; c
           <div className="trial-payment-icon"><LockKeyhole size={23}/></div>
           <p className="trial-payment-eyebrow">PAPERBLOOM · FULL ACCESS</p>
           <h2 id="trial-payment-title">Full access ලබාගන්න · முழு அணுகலைப் பெறுங்கள்</h2>
-          <p className="trial-payment-copy">Free trial එකෙන් බලන්න පමණයි. முழு பயன்பாட்டிற்கு பணம் செலுத்தவும். Trial access is view-only; pay to use all features.</p>
-          <p className="trial-payment-price">රු. 2,499</p>
+          <p className="trial-payment-copy">Free trial එකෙන් නම ස්ටිකර් සකස් කර පෙරදසුන් බලන්න පුළුවන්; මුද්‍රණය සහ විභාග ප්‍රශ්න පත්‍ර සඳහා සම්පූර්ණ ප්‍රවේශය අවශ්‍යයි. இலவச சோதனையில் பெயர் ஸ்டிக்கர்களை உருவாக்கி முன்னோட்டம் பார்க்கலாம்; அச்சிடவும் தேர்வுத் தாள்களை அணுகவும் முழு அணுகல் தேவை. Create and preview name stickers in the free trial; printing and exam papers require full access.</p>
+          <p className="trial-payment-price">රු. 1,499</p>
           <a className="trial-payment-whatsapp" href={`https://wa.me/94767660922?text=${encodeURIComponent(paymentMessage)}`} target="_blank" rel="noopener noreferrer">
             <MessageCircle size={17}/> WhatsApp හරහා විමසන්න · 0767660922
           </a>
-          <p className="trial-payment-note">සියලු විශේෂාංග සඳහා රු. 2,499 ගෙවා WhatsApp කරන්න. முழு அணுகலுக்கு ரூ. 2,499 செலுத்தி WhatsApp செய்யுங்கள்.</p>
+          <p className="trial-payment-note">සියලු විශේෂාංග සඳහා රු. 1,499 ගෙවා WhatsApp කරන්න. முழு அணுகலுக்கு ரூ. 1,499 செலுத்தி WhatsApp செய்யுங்கள்.</p>
         </section>
       </div>}
     </div>
@@ -130,12 +130,12 @@ export function TrialAccessBoundary({ enabled, children }: { enabled: boolean; c
 export function TrialNotice() {
   return <aside className="trial-notice" aria-label="Trial account information">
     <div className="trial-notice-track">
-      <span>Sinhala: නොමිලේ අත්හදා බැලීම — නැරඹීමට පමණයි. සියලු පහසුකම් සඳහා රු. 2,499 ගෙවා 0767660922 අමතන්න.</span>
-      <span lang="ta">தமிழ்: இலவச சோதனை — பார்க்க மட்டும். முழு அணுகலுக்கு ரூ. 2,499 செலுத்தி 0767660922-ஐ தொடர்புகொள்ளுங்கள்.</span>
-      <span>English: Free trial — view only. Pay Rs. 2,499 for full access. Call or WhatsApp 0767660922.</span>
-      <span aria-hidden="true">Sinhala: නොමිලේ අත්හදා බැලීම — නැරඹීමට පමණයි. සියලු පහසුකම් සඳහා රු. 2,499 ගෙවා 0767660922 අමතන්න.</span>
-      <span lang="ta" aria-hidden="true">தமிழ்: இலவச சோதனை — பார்க்க மட்டும். முழு அணுகலுக்கு ரூ. 2,499 செலுத்தி 0767660922-ஐ தொடர்புகொள்ளுங்கள்.</span>
-      <span aria-hidden="true">English: Free trial — view only. Pay Rs. 2,499 for full access. Call or WhatsApp 0767660922.</span>
+      <span>Sinhala: නොමිලේ අත්හදා බැලීමේදී නම ස්ටිකර් සකස් කර පෙරදසුන් බලන්න පුළුවන්. මුද්‍රණය සහ විභාග ප්‍රශ්න පත්‍ර සඳහා රු. 1,499 ගෙවා 0767660922 අමතන්න.</span>
+      <span lang="ta">தமிழ்: இலவச சோதனையில் பெயர் ஸ்டிக்கர்களை உருவாக்கி முன்னோட்டம் பார்க்கலாம். அச்சிடவும் தேர்வுத் தாள்களை அணுகவும் ரூ. 1,499 செலுத்தி 0767660922-ஐ தொடர்புகொள்ளுங்கள்.</span>
+      <span>English: Create and preview name stickers in the free trial. Pay Rs. 1,499 for printing and exam paper access. Call or WhatsApp 0767660922.</span>
+      <span aria-hidden="true">Sinhala: නොමිලේ අත්හදා බැලීමේදී නම ස්ටිකර් සකස් කර පෙරදසුන් බලන්න පුළුවන්. මුද්‍රණය සහ විභාග ප්‍රශ්න පත්‍ර සඳහා රු. 1,499 ගෙවා 0767660922 අමතන්න.</span>
+      <span lang="ta" aria-hidden="true">தமிழ்: இலவச சோதனையில் பெயர் ஸ்டிக்கர்களை உருவாக்கி முன்னோட்டம் பார்க்கலாம். அச்சிடவும் தேர்வுத் தாள்களை அணுகவும் ரூ. 1,499 செலுத்தி 0767660922-ஐ தொடர்புகொள்ளுங்கள்.</span>
+      <span aria-hidden="true">English: Create and preview name stickers in the free trial. Pay Rs. 1,499 for printing and exam paper access. Call or WhatsApp 0767660922.</span>
     </div>
   </aside>;
 }

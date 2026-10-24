@@ -443,6 +443,106 @@ textarea.cv-input { min-height: 78px; resize: vertical; line-height: 1.55; }
   html.cv-print-mode .cv-builder { display: contents !important; }
 }
 
+.document-library { color: #2d3047; }
+.document-library-workspace { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(360px,.85fr); align-items: start; gap: 22px; }
+.document-library-main,.document-editor-column { min-width: 0; }
+.document-library-intro { max-width: 760px; margin: 9px 0 18px; color: #6d7188; font-size: 13px; line-height: 1.8; }
+.document-search { display: flex; align-items: center; gap: 9px; border: 1px solid #e4e1ee; border-radius: 13px; background: white; padding: 4px 12px; color: #7b7595; }
+.document-search input { min-width: 0; border: 0; box-shadow: none; }
+.document-search input:focus { outline: none; }
+.document-category-list { display: flex; gap: 8px; overflow-x: auto; padding: 14px 0; scrollbar-width: thin; }
+.document-category-list .filter-chip { flex: 0 0 auto; max-width: 330px; white-space: normal; text-align: left; line-height: 1.45; }
+.document-template-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.document-template-card { display: flex; min-width: 0; min-height: 174px; flex-direction: column; align-items: flex-start; border: 1px solid #e8e5f1; border-radius: 15px; background: linear-gradient(145deg,#fff 0%,#fbfaff 100%); padding: 13px; color: #35334e; text-align: left; box-shadow: 0 5px 17px rgb(69 56 114 / 4%); }
+.document-template-card:hover,.document-template-card.selected { border-color: #b9a8ed; box-shadow: 0 8px 22px rgb(93 70 164 / 12%); }
+.document-template-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: #f0ebff; color: #6747bd; }
+.document-template-card-title { margin-top: 9px; font-size: 13px; font-weight: 750; line-height: 1.5; }
+.document-template-card-en { margin-top: 2px; color: #8b86a2; font-size: 10px; }
+.document-template-card-description { margin-top: 7px; color: #696b82; font-size: 11px; line-height: 1.65; }
+.document-template-category { margin-top: auto; padding-top: 9px; color: #6849b6; font-size: 10px; font-weight: 650; }
+.document-empty { grid-column: 1 / -1; }
+.document-recent-panel,.document-editor-card,.document-empty-state { border: 1px solid #e8e5f1; border-radius: 17px; background: white; box-shadow: 0 8px 25px rgb(69 56 114 / 5%); }
+.document-recent-panel { margin-top: 17px; padding: 15px; }
+.document-section-heading,.document-section-heading > div { display: flex; align-items: center; gap: 8px; }
+.document-section-heading { justify-content: space-between; }
+.document-section-heading > div { color: #51428a; }
+.document-section-heading h2 { margin: 0; font-size: 13px; }
+.document-section-heading > span,.document-muted { color: #86859a; font-size: 10px; }
+.document-recent-list { margin: 10px 0 0; padding: 0; list-style: none; }
+.document-recent-list li { display: flex; align-items: center; gap: 8px; border-top: 1px solid #f0eef5; padding: 9px 0; }
+.document-recent-open { display: flex; min-width: 0; flex: 1; flex-direction: column; align-items: flex-start; border: 0; background: transparent; color: #3c3b56; text-align: left; }
+.document-recent-open b { max-width: 100%; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.document-recent-open small { margin-top: 3px; color: #9390a5; font-size: 9px; }
+.document-editor-column { position: sticky; top: 16px; }
+.document-editor-card { overflow: hidden; }
+.document-editor-heading { border-bottom: 1px solid #eeebf4; padding: 17px 18px 13px; }
+.document-editor-heading h2,.document-empty-state h2 { margin: 4px 0; color: #34314f; font-size: 17px; }
+.document-editor-heading p,.document-empty-state p { margin: 4px 0 0; color: #73758b; font-size: 11px; line-height: 1.7; }
+.document-form-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; padding: 15px 17px; }
+.document-field { display: flex; min-width: 0; flex-direction: column; gap: 5px; color: #514f6a; font-size: 10px; font-weight: 650; }
+.document-field:has(textarea) { grid-column: 1 / -1; }
+.document-field i { color: #c45b78; font-style: normal; }
+.document-field .text-input { min-width: 0; min-height: 39px; padding: 8px 9px; font-size: 11px; line-height: 1.6; }
+.document-field textarea { resize: vertical; }
+.document-final-editor { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #efedf4; padding: 14px 17px 0; }
+.document-final-editor label { color: #514f6a; font-size: 11px; font-weight: 700; }
+.document-final-editor textarea { width: 100%; min-height: 220px; resize: vertical; padding: 11px; font-size: 12px; line-height: 1.9; }
+.document-final-editor small { color: #8b8a9c; font-size: 9px; }
+.document-action-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 17px 0; }
+.document-action-row > button { flex: 1 1 145px; justify-content: center; font-size: 11px; }
+.document-pdf-guidance { margin: 9px 17px 14px; color: #77768c; font-size: 10px; line-height: 1.7; }
+.document-legal-notice { margin: 0 17px 12px; border: 1px solid #f0d6a9; border-radius: 11px; background: #fff9eb; padding: 10px 12px; color: #775729; font-size: 10px; line-height: 1.7; }
+.document-legal-notice p { margin: 3px 0 0; }
+.document-print-root { container-type: inline-size; overflow: auto; border-top: 1px solid #efedf4; background: #f4f3f8; padding: 15px; }
+.document-paper { display: flex; container-type: inline-size; width: min(100%,210mm,49.5vh); aspect-ratio: 210 / 297; flex-direction: column; margin: 0 auto; overflow: hidden; background: white; padding: 9.5238%; box-shadow: 0 4px 22px rgb(39 38 57 / 12%); color: #171717; font-family: "Noto Sans Sinhala","Inter",sans-serif; }
+.document-paper-content { min-height: 0; flex: 1; margin: 0; overflow: hidden; color: inherit; font: inherit; font-size: clamp(6px,1.85cqw,11pt); line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.document-paper-footer { margin-top: auto; border-top: 1px solid #dedede; padding-top: 1.4286%; color: #777; font-size: clamp(4.5px,1.05cqw,8pt); line-height: 1.5; }
+.document-empty-state { display: grid; min-height: 240px; align-content: center; justify-items: center; padding: 28px; text-align: center; }
+.document-empty-state p { max-width: 280px; }
+.official-directory { display: grid; gap: 10px; padding: 14px; }
+.official-source-note { border: 1px solid #d9e8df; border-radius: 10px; background: #f1faf4; padding: 10px; color: #42614e; font-size: 10px; line-height: 1.7; }
+.official-link-card { display: grid; gap: 7px; border: 1px solid #eae8f0; border-radius: 12px; padding: 11px; }
+.official-link-card b,.official-link-card small,.official-link-card p { display: block; }
+.official-link-card b { color: #383650; font-size: 11px; line-height: 1.5; }
+.official-link-card small { margin-top: 3px; color: #77758d; font-size: 9px; }
+.official-link-card p { margin: 5px 0; color: #696a80; font-size: 10px; line-height: 1.65; }
+.official-link-button { width: fit-content; gap: 6px; text-decoration: none; }
+.official-source-link { width: fit-content; color: #6650ac; font-size: 9px; text-decoration: underline; }
+
+@media (max-width: 1180px) {
+  .document-library-workspace { grid-template-columns: minmax(0,1fr); }
+  .document-editor-column { position: static; }
+}
+@media (max-width: 600px) {
+  .document-template-grid { grid-template-columns: 1fr; }
+  .document-template-card { min-height: auto; }
+  .document-form-fields { grid-template-columns: 1fr; }
+  .document-field:has(textarea) { grid-column: auto; }
+  .document-section-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html.document-print-mode,html.document-print-mode body { width: auto !important; min-height: 0 !important; margin: 0 !important; background: white !important; }
+  html.document-print-mode body * { visibility: hidden !important; }
+  html.document-print-mode .document-print-root,html.document-print-mode .document-print-root * { visibility: visible !important; }
+  html.document-print-mode .document-library { display: block !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; }
+  html.document-print-mode .document-library-workspace { display: block !important; }
+  html.document-print-mode .document-editor-column { display: block !important; position: static !important; }
+  html.document-print-mode .document-editor-card { display: block !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; background: white !important; box-shadow: none !important; }
+  html.document-print-mode .studio-shell > .sidebar,
+  html.document-print-mode .studio-shell > .mobile-overlay,
+  html.document-print-mode .main-column > .topbar,
+  html.document-print-mode .main-content > :not(.document-library),
+  html.document-print-mode .document-library > :not(.document-library-workspace),
+  html.document-print-mode .document-library-main,
+  html.document-print-mode .document-editor-card > :not(.document-print-root),
+  html.document-print-mode .document-print-root > :not(.document-paper) { display: none !important; }
+  html.document-print-mode .document-print-root { display: block !important; position: static !important; overflow: visible !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; background: white !important; }
+  html.document-print-mode .document-paper { display: block !important; width: 210mm !important; height: auto !important; min-height: 297mm !important; aspect-ratio: auto !important; margin: 0 !important; overflow: visible !important; padding: 20mm !important; box-shadow: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  html.document-print-mode .document-paper-content { min-height: auto !important; overflow: visible !important; font-family: "Noto Sans Sinhala","Inter",sans-serif !important; font-size: 11pt !important; line-height: 1.9 !important; }
+  html.document-print-mode .document-paper-footer { margin-top: 16mm !important; padding-top: 3mm !important; font-size: 8pt !important; }
+}
+
 * { box-sizing: border-box; }
 html { background: #fbf8f3; }
 body {

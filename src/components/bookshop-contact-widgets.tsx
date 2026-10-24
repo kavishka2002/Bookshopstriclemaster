@@ -75,18 +75,18 @@ export function WelcomePopup({ open, userName, isTrial = false, onClose }: { ope
           <div id="bookshop-welcome-message" className="trial-promotion">
             <section lang="si">
               <h3>සිංහල 🇱🇰</h3>
-              <p>👀 නොමිලේ ලබාගත හැක්කේ යෙදුමේ පහසුකම් නැරඹීම සඳහා පමණි.</p>
+              <p>👀 නොමිලේ නම ස්ටිකර් සකස් කර පෙරදසුන් බලන්න. මුද්‍රණය සහ විභාග ප්‍රශ්න පත්‍ර සඳහා සම්පූර්ණ ප්‍රවේශය අවශ්‍යයි.</p>
               <p className="trial-promotion-highlight">✨ සම්පූර්ණ ප්‍රවේශය ලබාගැනීමට අදම ලියාපදිංචි වන්න!</p>
-              <p>💰 සාමාන්‍ය මිල: රු. 3,499<br/><strong>🔥 විශේෂ හඳුන්වාදීමේ මිල: රු. 2,499 පමණයි!</strong></p>
+              <p>💰 සාමාන්‍ය මිල: රු. 3,499<br/><strong>🔥 විශේෂ හඳුන්වාදීමේ මිල: රු. 1,499 පමණයි!</strong></p>
               <p>📞 වැඩි විස්තර සඳහා අමතන්න හෝ WhatsApp කරන්න:</p>
               <a className="trial-promotion-number" href={bookshopWelcomeInfo.phoneHref}>076 766 0922</a>
               <p>ඔබේ සියලු නිර්මාණ කටයුතු එකම ස්ථානයකින් පහසුවෙන් කරගන්න!</p>
             </section>
             <section lang="en">
               <h3>English 🇬🇧</h3>
-              <p>👀 The free trial provides view-only access.</p>
+              <p>👀 Create and preview name stickers for free. Printing and exam papers require full access.</p>
               <p className="trial-promotion-highlight">✨ Get Full Access Today!</p>
-              <p>💰 Regular Price: Rs. 3,499<br/><strong>🔥 Special Introductory Price: Only Rs. 2,499!</strong></p>
+              <p>💰 Regular Price: Rs. 3,499<br/><strong>🔥 Special Introductory Price: Only Rs. 1,499!</strong></p>
               <p>📞 Call or WhatsApp for more information:</p>
               <a className="trial-promotion-number" href={bookshopWelcomeInfo.phoneHref}>076 766 0922</a>
               <p>Enjoy a convenient, all-in-one solution for your creative and document needs!</p>
@@ -132,9 +132,9 @@ export function WelcomePopup({ open, userName, isTrial = false, onClose }: { ope
         </>}
       </div>
       <footer className="bookshop-welcome-footer">
-        <p>{isTrial ? "Trial access is view-only. Contact us to unlock all features." : "ඔබගේ ඉගෙනුම් කටයුතු වඩාත් නිර්මාණශීලී සහ පහසු කරගනිමු!"}</p>
+        <p>{isTrial ? "Create and preview name stickers in the free trial; printing and Past Paper Finder require full access." : "ඔබගේ ඉගෙනුම් කටයුතු වඩාත් නිර්මාණශීලී සහ පහසු කරගනිමු!"}</p>
         <button className="bookshop-welcome-start" type="button" data-trial-allow data-modal-focus onClick={onClose}>
-          <span>{isTrial ? "නැරඹීම ආරම්භ කරමු · Start browsing" : "හරි, Application එක භාවිතා කරමු!"}</span><Check size={17}/>
+          <span>{isTrial ? "ස්ටිකර් සකස් කිරීම අරඹන්න · Start creating" : "හරි, Application එක භාවිතා කරමු!"}</span><Check size={17}/>
         </button>
       </footer>
     </section>

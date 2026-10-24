@@ -2,10 +2,11 @@ import type { ImageAsset, StickerDesign, StickerTemplate, SubjectPreset } from "
 import type { CustomPrintDesign } from "./custom-print";
 import type { SavedPaper } from "./past-papers";
 import type { CvDraft } from "./cv";
+import type { SavedDocumentDraft } from "./document-library";
 
 const DB_NAME = "little-paper-studio";
-const DB_VERSION = 5;
-type StoreName = "designs" | "templates" | "assets" | "subjects" | "customPrintDesigns" | "pastPapers" | "cvDrafts";
+const DB_VERSION = 6;
+type StoreName = "designs" | "templates" | "assets" | "subjects" | "customPrintDesigns" | "pastPapers" | "cvDrafts" | "documentDrafts";
 let activeTenantId = "legacy";
 
 function databaseName(tenantId = activeTenantId): string {
@@ -25,6 +26,7 @@ function openDatabase(name = databaseName()): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains("customPrintDesigns")) db.createObjectStore("customPrintDesigns", { keyPath: "id" });
       if (!db.objectStoreNames.contains("pastPapers")) db.createObjectStore("pastPapers", { keyPath: "id" });
       if (!db.objectStoreNames.contains("cvDrafts")) db.createObjectStore("cvDrafts", { keyPath: "id" });
+      if (!db.objectStoreNames.contains("documentDrafts")) db.createObjectStore("documentDrafts", { keyPath: "id" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("Could not open local design storage."));
@@ -33,7 +35,7 @@ function openDatabase(name = databaseName()): Promise<IDBDatabase> {
 
 async function copyLegacyDatabase(target: IDBDatabase): Promise<void> {
   const legacy = await openDatabase(DB_NAME);
-  const stores: StoreName[] = ["designs", "templates", "assets", "subjects", "customPrintDesigns", "pastPapers", "cvDrafts"];
+  const stores: StoreName[] = ["designs", "templates", "assets", "subjects", "customPrintDesigns", "pastPapers", "cvDrafts", "documentDrafts"];
   await new Promise<void>((resolve, reject) => {
     const names = stores.filter(name => legacy.objectStoreNames.contains(name));
     if (!names.length) {
@@ -167,7 +169,10 @@ export const db = {
   deletePastPaper: (id: string) => request<undefined>("pastPapers", "readwrite", store => store.delete(id)),
   getCvDraft: () => request<CvDraft | undefined>("cvDrafts", "readonly", store => store.get("current")),
   putCvDraft: (draft: CvDraft) => request<IDBValidKey>("cvDrafts", "readwrite", store => store.put(draft)),
-  deleteCvDraft: () => request<undefined>("cvDrafts", "readwrite", store => store.delete("current"))
+  deleteCvDraft: () => request<undefined>("cvDrafts", "readwrite", store => store.delete("current")),
+  getAllDocumentDrafts: () => request<SavedDocumentDraft[]>("documentDrafts", "readonly", store => store.getAll()),
+  putDocumentDraft: (draft: SavedDocumentDraft) => request<IDBValidKey>("documentDrafts", "readwrite", store => store.put(draft)),
+  deleteDocumentDraft: (id: string) => request<undefined>("documentDrafts", "readwrite", store => store.delete(id))
 };
 
 const RECENTS_KEY = "little-paper-recent-ids";
