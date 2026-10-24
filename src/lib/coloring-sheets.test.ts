@@ -50,4 +50,14 @@ describe("colouring sheet catalogue and search", () => {
     expect(searchColoringSheets([school], "පාසල")).toHaveLength(1);
     expect(sortColoringSheets([home, school], "curriculum").map(sheet => sheet.titleOrder)).toEqual([1, 2]);
   });
+
+  it("recognizes Grade 3 lesson groups and searches their Sinhala and romanized titles", () => {
+    const plants = createGradeColoringSheet("grade 3/Title 3 palati ha gaswal/plant-and-tree-types.png", "/grade%203/plants.png", 500);
+    const animals = createGradeColoringSheet("grade 3/Title 4 apa awata sathun/common-animals.png", "/grade%203/animals.png", 600);
+
+    expect(plants).toMatchObject({ grade: 3, titleOrder: 3, titleSinhala: "පැළෑටි හා ගස්වැල්" });
+    expect(searchColoringSheets([plants], "palati ha gaswal")).toHaveLength(1);
+    expect(searchColoringSheets([plants], "පැළෑටි")).toHaveLength(1);
+    expect(sortColoringSheets([animals, plants], "curriculum").map(sheet => sheet.titleOrder)).toEqual([3, 4]);
+  });
 });

@@ -60,6 +60,22 @@ const gradeTitles: Record<number, Record<number, { sinhala: string; transliterat
     12: { sinhala: "ගමන් බිමන්", transliteration: "gaman biman" },
     14: { sinhala: "මිනිසුන් වැඩ කරන තැන්", transliteration: "minisun wada karana than" },
     15: { sinhala: "අපේ උදව් ඕනෑ අය", transliteration: "ape udau ona aya" }
+  },
+  3: {
+    1: { sinhala: "පාසල - අපේ පාසල් ජීවිතය", transliteration: "pasala ape pasal jeevithaya" },
+    2: { sinhala: "අපි ලංකා වැසියෝ", transliteration: "api lanka wasiyo" },
+    3: { sinhala: "පැළෑටි හා ගස්වැල්", transliteration: "palati ha gaswal" },
+    4: { sinhala: "අප අවට සතුන්", transliteration: "apa awata sathun" },
+    5: { sinhala: "අප භාවිත කරන දේ", transliteration: "apa bhawitha karana de" },
+    6: { sinhala: "අප කන බොන දේ", transliteration: "apa kana bona de" },
+    7: { sinhala: "ආරක්ෂාව හා පරිස්සම", transliteration: "arakshawa ha parissama" },
+    8: { sinhala: "ජලය", transliteration: "jalaya" },
+    9: { sinhala: "ගමනාගමනය", transliteration: "gamanagamanaya" },
+    10: { sinhala: "ගෙවත්තේ ඇති දේ", transliteration: "gewaththe athi de" },
+    11: { sinhala: "වැඩ පහසු කරන උපකරණ", transliteration: "wada pahasu karana upakarana" },
+    13: { sinhala: "පොළව හා ජලය", transliteration: "polawa ha jalaya" },
+    15: { sinhala: "මිනිසා හා පරිසරය", transliteration: "minisa ha parisaraya" },
+    16: { sinhala: "අපේ ඓතිහාසික ස්ථාන", transliteration: "ape aithihasika sthana" }
   }
 };
 
