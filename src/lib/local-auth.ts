@@ -5,6 +5,8 @@ const AUTH_VERSION = 1;
 const PBKDF2_ITERATIONS = 310_000;
 const DEMO_USERNAME = "P321";
 const DEMO_PASSWORD = "1234";
+const DEMO_BOOKSHOP_NAME = "PaperBloom";
+const LEGACY_DEMO_BOOKSHOP_NAME = "Little Paper Demo Bookshop";
 
 export type AccountRole = "admin" | "shop";
 export interface LocalAccount {
@@ -130,7 +132,7 @@ export async function initializeLocalAccounts(): Promise<void> {
   const password = current.length === 0 && !hasSeedAdmin ? await createPasswordRecord(DEMO_PASSWORD) : undefined;
   const admin: LocalAccount | undefined = password ? {
     id: crypto.randomUUID(), username: DEMO_USERNAME, normalizedUsername: normalize(DEMO_USERNAME),
-    bookshopName: "Little Paper Demo Bookshop", ownerContact: "", role: "admin", active: true,
+    bookshopName: DEMO_BOOKSHOP_NAME, ownerContact: "", role: "admin", active: true,
     mustChangePassword: true, ...password, createdAt: Date.now(), failedAttempts: 0, lockedUntil: 0
   } : undefined;
   const database = await openAuthDb();
@@ -141,6 +143,13 @@ export async function initializeLocalAccounts(): Promise<void> {
     read.onsuccess = () => {
       const accounts = read.result as LocalAccount[];
       try {
+        for (const account of accounts) {
+          if (account.bookshopName === LEGACY_DEMO_BOOKSHOP_NAME) {
+            const updated = { ...account, bookshopName: DEMO_BOOKSHOP_NAME };
+            store.put(updated);
+            accounts[accounts.indexOf(account)] = updated;
+          }
+        }
         if (accounts.length === 0) {
           if (hasSeedAdmin) {
             const seededAdmin = seeds.find(seed => seed.role === "admin");
