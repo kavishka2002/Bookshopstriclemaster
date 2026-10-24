@@ -1,4 +1,4 @@
-import type { AssetCategory, DesignImage, StickerTemplate, TextElement } from "@/types";
+import type { AssetCategory, DesignImage, EnglishFontFamily, SinhalaFontFamily, StickerTemplate, TextElement } from "@/types";
 import { CUSTOM_SIZE_ARTWORK_ID } from "./custom-size-template";
 
 export interface CustomArtworkAsset {
@@ -17,6 +17,7 @@ interface CustomArtworkDesign extends CustomArtworkAsset {
   accent: string;
   secondary: string;
   decoration: string;
+  fontFamily?: EnglishFontFamily;
   layout: StickerTemplate["layout"];
   radius: number;
   widthMm?: number;
@@ -65,6 +66,16 @@ export const customArtworkAssets: CustomArtworkAsset[] = [
   { id: "custom-art-birds", name: "Garden Birds", file: "garden-birds.png", category: "Nature" },
   { id: "custom-art-reading-student", name: "Reading Student", file: "reading-student.png", category: "School" },
   { id: "custom-art-duck", name: "Sailor Duck", file: "sailor-duck.png", category: "Animals" },
+  { id: "custom-art-fairy-vibrant-wings", name: "Fairy Sparkle Garden", file: "fairy-vibrant-wings.png", category: "Cartoon" },
+  { id: "custom-art-fairy-crown-wings", name: "Crown Wing Fairy", file: "fairy-crown-wings.png", category: "Cartoon" },
+  { id: "custom-art-unicorn-rainbow-mane", name: "Rainbow Mane Unicorn", file: "unicorn-rainbow-mane.png", category: "Cartoon" },
+  { id: "custom-art-unicorn-kawaii", name: "Sweetheart Unicorn", file: "unicorn-kawaii.png", category: "Cartoon" },
+  { id: "custom-art-tiger-skateboard", name: "Skater Tiger", file: "tiger-skateboard.png", category: "Animals" },
+  { id: "custom-art-bear-besties", name: "Bestie Bear Hugs", file: "bear-besties.png", category: "Animals" },
+  { id: "custom-art-parrot-rainbow", name: "Rainbow Parrot Pal", file: "parrot-rainbow.png", category: "Nature" },
+  { id: "custom-art-chick-sunshine", name: "Sunny Chick Buddy", file: "chick-sunshine.png", category: "Animals" },
+  { id: "custom-art-bluebird-buddy", name: "Bluebird Giggles", file: "bluebird-buddy.png", category: "Animals" },
+  { id: "custom-art-fairy-star-wand", name: "Star Wand Fairy", file: "fairy-star-wand.png", category: "Cartoon" },
   { id: CUSTOM_SIZE_ARTWORK_ID, name: "Apple & pencil", file: "custom-size-apple-pencil.png", category: "School", folder: "starter-art" }
 ];
 
@@ -285,10 +296,114 @@ const designs: CustomArtworkDesign[] = [
     decoration: "collection-art-winter-snowpal", layout: "stack", radius: 15, borderStyle: "solid",
     image: { x: 84, y: 50, width: 19 },
     text: { x: 43, width: 66, align: "left", nameY: 21, schoolY: 42, gradeY: 63, subjectY: 82, nameSize: 22, schoolSize: 11, gradeSize: 10, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-storybook-girl", name: "Storybook Girl", file: "storybook-girl.png", category: "Cartoon",
+    templateId: "new-art-enchanted-garden-frame", templateName: "Enchanted Garden Frame",
+    background: "#fffaf0", border: "#d8769a", accent: "#603e50", secondary: "#75a66b",
+    decoration: "collection-art-enchanted-frame", layout: "split", radius: 9, borderStyle: "solid",
+    image: { x: 17, y: 51, width: 22 },
+    text: { x: 68, width: 57, align: "center", nameY: 22, schoolY: 43, gradeY: 64, subjectY: 83, nameSize: 23, schoolSize: 11, gradeSize: 10, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-birds", name: "Garden Birds", file: "garden-birds.png", category: "Nature",
+    templateId: "new-art-bright-bird-parade", templateName: "Bright Bird Parade",
+    background: "#fff9e8", border: "#76a84f", accent: "#344d38", secondary: "#e2a33a",
+    decoration: "collection-art-bright-birds", layout: "split", radius: 5, borderStyle: "solid",
+    image: { x: 83, y: 51, width: 22 },
+    text: { x: 42, width: 63, align: "left", nameY: 22, schoolY: 43, gradeY: 64, subjectY: 83, nameSize: 23, schoolSize: 11, gradeSize: 10, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-school-friends-trio", name: "School Friends Trio", file: "school-friends-trio.png", category: "School",
+    templateId: "new-art-adventure-study-pals", templateName: "Adventure Study Pals",
+    background: "#fff8e9", border: "#e0a52e", accent: "#30465f", secondary: "#e86d44",
+    decoration: "collection-art-adventure-pals", layout: "playful", radius: 8, borderStyle: "solid",
+    image: { x: 17, y: 51, width: 22 },
+    text: { x: 68, width: 57, align: "center", nameY: 22, schoolY: 43, gradeY: 64, subjectY: 83, nameSize: 23, schoolSize: 11, gradeSize: 10, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-fairy-vibrant-wings", name: "Fairy Sparkle Garden", file: "fairy-vibrant-wings.png", category: "Cartoon",
+    templateId: "new-art-fairy-sparkle-garden", templateName: "Fairy Sparkle Garden",
+    background: "#fff1fb", border: "#c052a2", accent: "#683568", secondary: "#f2a5d7",
+    decoration: "collection-art-fairy-sparkle", fontFamily: "Fredoka", layout: "playful", radius: 17, borderStyle: "solid",
+    image: { x: 83, y: 50, width: 28 },
+    text: { x: 36, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-fairy-crown-wings", name: "Crown Wing Fairy", file: "fairy-crown-wings.png", category: "Cartoon",
+    templateId: "new-art-crown-wing-fairy", templateName: "Crown Wing Fairy",
+    background: "#f0f8ff", border: "#79b8df", accent: "#365879", secondary: "#e7a7d3",
+    decoration: "collection-art-fairy-crown", fontFamily: "Baloo 2", layout: "split", radius: 12, borderStyle: "solid",
+    image: { x: 17, y: 50, width: 27 },
+    text: { x: 64, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-unicorn-rainbow-mane", name: "Rainbow Mane Unicorn", file: "unicorn-rainbow-mane.png", category: "Cartoon",
+    templateId: "new-art-rainbow-mane-unicorn", templateName: "Rainbow Mane Unicorn",
+    background: "#effcff", border: "#47b9c5", accent: "#286375", secondary: "#ef9db6",
+    decoration: "collection-art-unicorn-rainbow", fontFamily: "Fredoka", layout: "split", radius: 20, borderStyle: "solid",
+    image: { x: 83, y: 50, width: 28 },
+    text: { x: 36, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-unicorn-kawaii", name: "Sweetheart Unicorn", file: "unicorn-kawaii.png", category: "Cartoon",
+    templateId: "new-art-sweetheart-unicorn", templateName: "Sweetheart Unicorn",
+    background: "#fff2f5", border: "#e77aa4", accent: "#7b3c69", secondary: "#8ccfd2",
+    decoration: "collection-art-unicorn-heart", fontFamily: "Baloo 2", layout: "playful", radius: 15, borderStyle: "dashed",
+    image: { x: 17, y: 50, width: 27 },
+    text: { x: 64, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-tiger-skateboard", name: "Skater Tiger", file: "tiger-skateboard.png", category: "Animals",
+    templateId: "new-art-skater-tiger", templateName: "Skater Tiger",
+    background: "#f2fcf8", border: "#25a99b", accent: "#26486b", secondary: "#ff9b3e",
+    decoration: "collection-art-skater-tiger", fontFamily: "Fredoka", layout: "banner", radius: 9, borderStyle: "solid",
+    image: { x: 83, y: 50, width: 29 },
+    text: { x: 36, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-bear-besties", name: "Bestie Bear Hugs", file: "bear-besties.png", category: "Animals",
+    templateId: "new-art-bestie-bear-hugs", templateName: "Bestie Bear Hugs",
+    background: "#fff4f0", border: "#d88679", accent: "#744a55", secondary: "#e9a3b2",
+    decoration: "collection-art-bear-hugs", fontFamily: "Baloo 2", layout: "split", radius: 18, borderStyle: "solid",
+    image: { x: 17, y: 50, width: 27 },
+    text: { x: 64, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-parrot-rainbow", name: "Rainbow Parrot Pal", file: "parrot-rainbow.png", category: "Nature",
+    templateId: "new-art-rainbow-parrot-pal", templateName: "Rainbow Parrot Pal",
+    background: "#f2fff3", border: "#53aa78", accent: "#35674d", secondary: "#e6a93c",
+    decoration: "collection-art-parrot-party", fontFamily: "Fredoka", layout: "playful", radius: 14, borderStyle: "solid",
+    image: { x: 83, y: 50, width: 28 },
+    text: { x: 36, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-chick-sunshine", name: "Sunny Chick Buddy", file: "chick-sunshine.png", category: "Animals",
+    templateId: "new-art-sunny-chick-buddy", templateName: "Sunny Chick Buddy",
+    background: "#fff9e5", border: "#e6b43b", accent: "#745523", secondary: "#f28c53",
+    decoration: "collection-art-sunny-chick", fontFamily: "Baloo 2", layout: "split", radius: 13, borderStyle: "solid",
+    image: { x: 17, y: 50, width: 27 },
+    text: { x: 64, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-bluebird-buddy", name: "Bluebird Giggles", file: "bluebird-buddy.png", category: "Animals",
+    templateId: "new-art-bluebird-giggles", templateName: "Bluebird Giggles",
+    background: "#eefaff", border: "#4a9ed1", accent: "#355a83", secondary: "#f0a947",
+    decoration: "collection-art-bluebird-giggles", fontFamily: "Fredoka", layout: "banner", radius: 11, borderStyle: "solid",
+    image: { x: 83, y: 50, width: 28 },
+    text: { x: 36, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
+  },
+  {
+    id: "custom-art-fairy-star-wand", name: "Star Wand Fairy", file: "fairy-star-wand.png", category: "Cartoon",
+    templateId: "new-art-star-wand-fairy", templateName: "Star Wand Fairy",
+    background: "#f5f1ff", border: "#9380db", accent: "#51447e", secondary: "#edba55",
+    decoration: "collection-art-fairy-star", fontFamily: "Baloo 2", layout: "split", radius: 16, borderStyle: "solid",
+    image: { x: 17, y: 50, width: 27 },
+    text: { x: 64, width: 60, align: "center", nameY: 20, schoolY: 41, gradeY: 62, subjectY: 81, nameSize: 24, schoolSize: 11.5, gradeSize: 10.5, subjectSize: 12 }
   }
 ];
 
-function makeText(style: CustomArtworkDesign, field: Exclude<TextElement["field"], "custom">): TextElement {
+function makeText(style: CustomArtworkDesign, field: Exclude<TextElement["field"], "custom">, sinhalaFontFamily: SinhalaFontFamily): TextElement {
   const { text } = style;
   const fields = {
     name: { y: text.nameY, fontSize: text.nameSize, height: 22, color: style.accent, bold: true },
@@ -302,7 +417,8 @@ function makeText(style: CustomArtworkDesign, field: Exclude<TextElement["field"
     field,
     text: "",
     visible: true,
-    fontFamily: "Inter",
+    fontFamily: style.fontFamily ?? "Inter",
+    sinhalaFontFamily,
     ...fieldStyle,
     wrap: true,
     align: field === "name" ? text.align : "center",
@@ -314,7 +430,16 @@ function makeText(style: CustomArtworkDesign, field: Exclude<TextElement["field"
   };
 }
 
-export const customArtworkTemplates: StickerTemplate[] = designs.map(style => {
+const sinhalaFontFamilies: SinhalaFontFamily[] = [
+  "Abhaya Libre",
+  "Gemunu Libre",
+  "Noto Serif Sinhala",
+  "Yaldevi",
+  "Noto Sans Sinhala"
+];
+
+export const customArtworkTemplates: StickerTemplate[] = designs.map((style, index) => {
+  const sinhalaFontFamily = sinhalaFontFamilies[index % sinhalaFontFamilies.length];
   const image: DesignImage = {
     id: `${style.templateId}-art`,
     assetId: style.id,
@@ -333,16 +458,16 @@ export const customArtworkTemplates: StickerTemplate[] = designs.map(style => {
     borderStyle: style.borderStyle,
     radius: style.radius,
     borderWidth: style.templateId === "new-art-apple-pencil" ? 1.6 : 1.4,
-    innerBorder: ["new-art-creative-circle-boy", "new-art-lion-sunshine", "new-art-garden-birds", "new-art-apple-pencil"].includes(style.templateId),
+    innerBorder: ["new-art-creative-circle-boy", "new-art-lion-sunshine", "new-art-garden-birds", "new-art-apple-pencil", "new-art-enchanted-garden-frame", "new-art-bright-bird-parade", "new-art-adventure-study-pals"].includes(style.templateId),
     showCutline: false,
     layout: style.layout,
     decoration: style.decoration,
     images: [image],
     texts: [
-      makeText(style, "name"),
-      makeText(style, "school"),
-      makeText(style, "grade"),
-      makeText(style, "subject")
+      makeText(style, "name", sinhalaFontFamily),
+      makeText(style, "school", sinhalaFontFamily),
+      makeText(style, "grade", sinhalaFontFamily),
+      makeText(style, "subject", sinhalaFontFamily)
     ],
     favourite: false,
     createdAt: 0,

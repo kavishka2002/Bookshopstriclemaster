@@ -13,7 +13,7 @@ describe("supplied artwork design collection", () => {
     const existingIds = new Set([...starterTemplates, ...newDesignTemplates].map(template => template.id));
     const newIds = customArtworkTemplates.map(template => template.id);
 
-    expect(customArtworkTemplates).toHaveLength(27);
+    expect(customArtworkTemplates).toHaveLength(40);
     expect(new Set(newIds).size).toBe(newIds.length);
     expect(newIds.every(id => !existingIds.has(id))).toBe(true);
     expect(customArtworkTemplateIds.size).toBe(customArtworkTemplates.length);
@@ -33,6 +33,45 @@ describe("supplied artwork design collection", () => {
       expect(image!.width).toBeGreaterThan(0);
       expect(image!.rotation).toBe(0);
     }
+  });
+
+  it("rotates through the available Sinhala font styles across the character designs", () => {
+    const sinhalaFontFamilies = new Set(
+      customArtworkTemplates.flatMap(template => template.texts?.map(text => text.sinhalaFontFamily) ?? [])
+    );
+
+    expect(sinhalaFontFamilies).toEqual(new Set([
+      "Abhaya Libre",
+      "Gemunu Libre",
+      "Noto Serif Sinhala",
+      "Yaldevi",
+      "Noto Sans Sinhala"
+    ]));
+    expect(customArtworkTemplates.every(template => {
+      const textFields = template.texts ?? [];
+      return textFields.length === 4 && textFields.every(text => text.sinhalaFontFamily === textFields[0]?.sinhalaFontFamily);
+    })).toBe(true);
+  });
+
+  it("uses the supplied child-friendly characters with playful lettering", () => {
+    const suppliedTemplateIds = new Set([
+      "new-art-fairy-sparkle-garden",
+      "new-art-crown-wing-fairy",
+      "new-art-rainbow-mane-unicorn",
+      "new-art-sweetheart-unicorn",
+      "new-art-skater-tiger",
+      "new-art-bestie-bear-hugs",
+      "new-art-rainbow-parrot-pal",
+      "new-art-sunny-chick-buddy",
+      "new-art-bluebird-giggles",
+      "new-art-star-wand-fairy"
+    ]);
+    const suppliedTemplates = customArtworkTemplates.filter(template => suppliedTemplateIds.has(template.id));
+
+    expect(suppliedTemplates).toHaveLength(10);
+    expect(suppliedTemplates.every(template =>
+      template.texts?.every(text => text.fontFamily === "Fredoka" || text.fontFamily === "Baloo 2")
+    )).toBe(true);
   });
 
   it("keeps the standard editable text fields readable with Sinhala and mixed-language content", () => {
@@ -94,7 +133,20 @@ describe("supplied artwork design collection", () => {
       "new-art-young-scholar",
       "new-art-midnight-cat",
       "new-art-storybook-girl",
-      "new-art-winter-snowpal"
+      "new-art-winter-snowpal",
+      "new-art-enchanted-garden-frame",
+      "new-art-bright-bird-parade",
+      "new-art-adventure-study-pals",
+      "new-art-fairy-sparkle-garden",
+      "new-art-crown-wing-fairy",
+      "new-art-rainbow-mane-unicorn",
+      "new-art-sweetheart-unicorn",
+      "new-art-skater-tiger",
+      "new-art-bestie-bear-hugs",
+      "new-art-rainbow-parrot-pal",
+      "new-art-sunny-chick-buddy",
+      "new-art-bluebird-giggles",
+      "new-art-star-wand-fairy"
     ];
 
     for (const id of suppliedTemplateIds) {

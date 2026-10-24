@@ -339,6 +339,97 @@ export function StickerDecoration({
         <path d="M6 8h25M69 42h25" stroke={accent} strokeWidth=".6" opacity=".6"/>
         <circle cx="88" cy="9" r="2" fill={secondary} opacity=".75"/><circle cx="12" cy="40" r="1.4" fill={accent} opacity=".4"/>
       </svg>;
+    case "collection-art-enchanted-frame":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="3" fill="none" stroke={secondary} strokeWidth="2.2" opacity=".75"/>
+        <rect x="5" y="5" width="90" height="40" rx="2" fill="none" stroke={accent} strokeWidth=".45" strokeDasharray="1.2 1.7" opacity=".55"/>
+        <path d="M7 8c3 0 4 2 4 5-3 0-4-2-4-5Zm5 3c0-3 2-5 5-5 0 3-2 5-5 5Zm71 27c3 0 5 2 5 5-3 0-5-2-5-5Zm5 1c0-3 2-5 5-5 0 3-2 5-5 5Z" fill={secondary}/>
+        <circle cx="14" cy="13" r="1" fill={accent}/><circle cx="88" cy="38" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-bright-birds":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="1.5" fill="none" stroke={secondary} strokeWidth="2.4" opacity=".8"/>
+        <path d="M4 7h22m-22 2h15M74 41h22m-14 2h14" stroke={accent} strokeWidth=".6" strokeLinecap="round" opacity=".7"/>
+        <path d="m14 37 1.2 2.7 2.8.4-2 1.9.5 2.8-2.5-1.3-2.5 1.3.5-2.8-2-1.9 2.8-.4zM85 7l1 2 2.1.3-1.5 1.5.4 2.1-2-1-1.9 1 .4-2.1-1.6-1.5 2.2-.3z" fill={secondary}/>
+        <circle cx="23" cy="40" r="1" fill={accent}/><circle cx="78" cy="9" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-adventure-pals":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="4" fill="none" stroke={secondary} strokeWidth="2.2" opacity=".82"/>
+        <path d="M5 8h17m-17 2h11M78 40h17m-11 2h11" stroke={accent} strokeWidth=".65" strokeLinecap="round" opacity=".65"/>
+        <path d="m25 6 1 2.2 2.4.3-1.7 1.7.4 2.4-2.1-1.1-2.1 1.1.4-2.4-1.7-1.7 2.4-.3zM76 37l1 2.2 2.4.3-1.7 1.7.4 2.4-2.1-1.1-2.1 1.1.4-2.4-1.7-1.7 2.4-.3z" fill={secondary}/>
+        <circle cx="10" cy="39" r="1.2" fill={accent}/><circle cx="90" cy="10" r="1.2" fill={accent}/>
+      </svg>;
+    case "collection-art-fairy-sparkle":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="8" fill="none" stroke={secondary} strokeWidth="2.4"/>
+        <rect x="4.5" y="4.5" width="91" height="41" rx="6" fill="none" stroke={accent} strokeWidth=".45" strokeDasharray="1 1.6" opacity=".65"/>
+        <path d="m10 8 1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8L6 13l2.8-1.2zM91 35l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill={secondary}/>
+        <circle cx="18" cy="39" r="1" fill={accent}/><circle cx="83" cy="10" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-fairy-crown":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="5" fill="none" stroke={accent} strokeWidth="1.25"/>
+        <path d="M7 7h25m36 0h25M7 43h25m36 0h25" stroke={secondary} strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="m12 6 1.5 3 3 .4-2.2 2.1.5 3-2.8-1.4-2.7 1.4.5-3-2.2-2.1 3-.4zM88 35l1.4 2.7 2.8.4-2 2 .5 2.8-2.7-1.3-2.6 1.3.5-2.8-2.1-2 2.8-.4z" fill={secondary}/>
+        <circle cx="89" cy="11" r="1" fill={accent}/><circle cx="11" cy="39" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-unicorn-rainbow":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="10" fill="none" stroke={secondary} strokeWidth="2.4"/>
+        <path d="M5 42c6-8 13-8 19 0m52-34c6 8 13 8 19 0" fill="none" stroke={accent} strokeWidth=".75" strokeLinecap="round" opacity=".7"/>
+        <path d="m15 7 1.2 2.3 2.5.4-1.8 1.7.4 2.5-2.3-1.2-2.2 1.2.4-2.5-1.8-1.7 2.5-.4zM86 36l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill={secondary}/>
+        <circle cx="23" cy="9" r="1" fill={accent}/><circle cx="77" cy="41" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-unicorn-heart":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="7" fill="none" stroke={secondary} strokeWidth="2.2"/>
+        <rect x="5" y="5" width="90" height="40" rx="5" fill="none" stroke={accent} strokeWidth=".5" strokeDasharray="2 1.5" opacity=".55"/>
+        <path d="M9 10c0-2 3-2 3 0 0-2 3-2 3 0s-3 4-3 4-3-2-3-4Zm73 27c0-2 3-2 3 0 0-2 3-2 3 0s-3 4-3 4-3-2-3-4Z" fill={secondary}/>
+        <circle cx="19" cy="39" r="1" fill={accent}/><circle cx="84" cy="10" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-skater-tiger":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="3" fill="none" stroke={secondary} strokeWidth="2.3"/>
+        <path d="M5 7h18m-13 3h14m53 30h18m-13 3h14" stroke={accent} strokeWidth="1.1" strokeLinecap="round"/>
+        <circle cx="12" cy="37" r="2" fill="none" stroke={secondary} strokeWidth=".8"/><circle cx="88" cy="12" r="2" fill="none" stroke={secondary} strokeWidth=".8"/>
+        <path d="m27 5 1 2 2 .3-1.5 1.5.3 2-1.8-.9-1.8.9.3-2L25 7.3l2-.3z" fill={accent}/>
+      </svg>;
+    case "collection-art-bear-hugs":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="8" fill="none" stroke={secondary} strokeWidth="2.5"/>
+        <path d="M7 8c0-2 3-2 3 0 0-2 3-2 3 0s-3 4-3 4-3-2-3-4Zm76 29c0-2 3-2 3 0 0-2 3-2 3 0s-3 4-3 4-3-2-3-4Z" fill={secondary}/>
+        <path d="M15 40h18m52-30H67" stroke={accent} strokeWidth=".55" strokeLinecap="round" opacity=".6"/>
+        <circle cx="20" cy="10" r=".9" fill={accent}/><circle cx="80" cy="40" r=".9" fill={accent}/>
+      </svg>;
+    case "collection-art-parrot-party":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="5" fill="none" stroke={secondary} strokeWidth="2.3"/>
+        <path d="M8 41c4-6 7-8 13-8m71-24c-4 6-7 8-13 8" fill="none" stroke={accent} strokeWidth=".8" strokeLinecap="round"/>
+        <path d="M17 32c-4 0-6-3-5-6 4 0 6 2 6 5m-3 1c0-4 2-7 6-8 1 4-1 7-5 9m66-4c-4 0-6-3-5-6 4 0 6 2 6 5m-3 1c0-4 2-7 6-8 1 4-1 7-5 9" fill={secondary}/>
+        <circle cx="28" cy="10" r="1" fill={accent}/><circle cx="72" cy="40" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-sunny-chick":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="7" fill="none" stroke={secondary} strokeWidth="2.5"/>
+        <path d="M6 8h22M72 42h22" stroke={accent} strokeWidth=".6" strokeLinecap="round" opacity=".6"/>
+        <path d="m14 33 1.1 2.4 2.5.4-1.8 1.7.4 2.5-2.2-1.2-2.2 1.2.4-2.5-1.8-1.7 2.5-.4zM86 8l1.1 2.4 2.5.4-1.8 1.7.4 2.5-2.2-1.2-2.2 1.2.4-2.5-1.8-1.7 2.5-.4z" fill={secondary}/>
+        <circle cx="24" cy="40" r="1" fill={accent}/><circle cx="77" cy="9" r="1" fill={accent}/>
+      </svg>;
+    case "collection-art-bluebird-giggles":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="4" fill="none" stroke={secondary} strokeWidth="2.4"/>
+        <path d="M7 8c5 0 8 2 9 7m77 27c-5 0-8-2-9-7" fill="none" stroke={accent} strokeWidth=".65"/>
+        <path d="M15 14c-4 0-6-3-5-6 4 0 6 2 6 5m69 23c4 0 6 3 5 6-4 0-6-2-6-5" fill={secondary}/>
+        <path d="m23 7 1 2.1 2.3.3-1.7 1.6.4 2.3-2-1-2 1 .4-2.3-1.7-1.6 2.3-.3zM77 37l1 2.1 2.3.3-1.7 1.6.4 2.3-2-1-2 1 .4-2.3-1.7-1.6 2.3-.3z" fill={accent}/>
+      </svg>;
+    case "collection-art-fairy-star":
+      return <svg aria-hidden="true" viewBox="0 0 100 50" preserveAspectRatio="none" style={common}>
+        <rect x="1.5" y="1.5" width="97" height="47" rx="8" fill="none" stroke={secondary} strokeWidth="2.5"/>
+        <path d="M6 8h22m44 0h22M6 42h22m44 0h22" stroke={accent} strokeWidth=".5" strokeDasharray="1 1.5" opacity=".65"/>
+        <path d="m13 7 1.3 2.8 2.8 1.3-2.8 1.2-1.3 2.8-1.2-2.8L9 11.1l2.8-1.3zM87 34l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill={secondary}/>
+        <circle cx="21" cy="39" r=".9" fill={accent}/><circle cx="79" cy="11" r=".9" fill={accent}/>
+      </svg>;
     default:
       return null;
   }
