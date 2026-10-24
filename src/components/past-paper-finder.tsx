@@ -5,10 +5,13 @@ import {
   FolderOpen, LoaderCircle, Pencil, Printer, Search, Trash2, Upload, X
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { db } from "@/lib/database";
 import { LocalizedUi } from "@/components/app-language";
 import { AppToast } from "@/components/app-toast";
 import { useAppDialog } from "@/components/app-dialog";
+import { useTrialAccess } from "@/components/trial-access";
 import {
   checksumForBlob, formatPaperSize, isSafeSourceUrl, sameSavedPaper,
   sanitizePaperFilename, subjectsByExamination, validatePdfFile
@@ -25,6 +28,63 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1989 }, (_, index) => currentYear - index);
 const officialSourceUrl = "https://doenets.lk/";
 const eThaksalawaUrl = "https://e-thaksalawa.moe.gov.lk/";
+pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
+
+function TrialPaperPreview({ url, pageNumber, onPageCount }: { url: string; pageNumber: number; onPageCount: (count: number) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [document, setDocument] = useState<pdfjs.PDFDocumentProxy | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadingTask = pdfjs.getDocument({ url, isEvalSupported: false });
+    void loadingTask.promise.then(pdfDocument => {
+      if (cancelled) return;
+      setDocument(pdfDocument);
+      setError("");
+      onPageCount(pdfDocument.numPages);
+    }).catch(cause => {
+      if (cancelled) return;
+      console.error("Could not render a trial PDF preview.", cause);
+      setError("Preview unavailable");
+    });
+    return () => {
+      cancelled = true;
+      void loadingTask.destroy().catch(cause => console.error("Could not release trial PDF preview resources.", cause));
+    };
+  }, [onPageCount, url]);
+
+  useEffect(() => {
+    if (!document || !canvasRef.current) return;
+    let cancelled = false;
+    let renderTask: RenderTask | undefined;
+    void document.getPage(pageNumber).then(page => {
+      if (cancelled || !canvasRef.current) return;
+      const viewport = page.getViewport({ scale: 1.4 });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas rendering is unavailable in this browser.");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      renderTask = page.render({ canvasContext: context, viewport });
+      return renderTask.promise;
+    }).catch(cause => {
+      if (cancelled) return;
+      console.error(`Could not render trial PDF page ${pageNumber}.`, cause);
+      setError("This PDF page could not be previewed.");
+    });
+    return () => {
+      cancelled = true;
+      renderTask?.cancel();
+    };
+  }, [document, pageNumber]);
+
+  return <div className="grid min-h-0 flex-1 place-items-center overflow-auto bg-slate-100 p-3">
+    {error ? <p className="text-sm text-slate-500">{error}</p>
+      : !document ? <LoaderCircle className="animate-spin text-slate-400" size={22}/>
+        : <canvas ref={canvasRef} className="max-h-full max-w-full object-contain"/>}
+  </div>;
+}
 
 type PaperDownloadState = "Paper Found" | "Downloading PDF" | "Validating PDF" | "Saved Locally" | "Already Saved" | "Download Failed";
 interface PaperDownloadResult {
@@ -72,6 +132,7 @@ const defaultSubject = (examination: ExaminationType) => subjectsByExamination[e
 
 export function PastPaperFinder() {
   const { confirm, prompt, host: dialogHost } = useAppDialog();
+  const isTrial = useTrialAccess();
   const [examination, setExamination] = useState<ExaminationType>("O/L");
   const [year, setYear] = useState(currentYear - 2);
   const [subject, setSubject] = useState(defaultSubject("O/L"));
@@ -95,6 +156,8 @@ export function PastPaperFinder() {
   const [sortBy, setSortBy] = useState<"year" | "subject" | "downloadedAt">("downloadedAt");
   const [sourceUrl, setSourceUrl] = useState("");
   const [preview, setPreview] = useState<{ paper: SavedPaper; url: string } | null>(null);
+  const [previewPage, setPreviewPage] = useState(1);
+  const [previewPageCount, setPreviewPageCount] = useState(0);
   const [importedFilename, setImportedFilename] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const previewFrame = useRef<HTMLIFrameElement>(null);
@@ -124,6 +187,8 @@ export function PastPaperFinder() {
   }, []);
   const showPreview = (paper: SavedPaper) => {
     if (preview) URL.revokeObjectURL(preview.url);
+    setPreviewPage(1);
+    setPreviewPageCount(0);
     setPreview({ paper, url: URL.createObjectURL(paper.blob) });
   };
   const closePreview = () => {
@@ -145,12 +210,13 @@ export function PastPaperFinder() {
         : right.downloadedAt - left.downloadedAt);
   }, [papers, libraryQuery, filterExamination, filterMedium, filterKind, sortBy]);
 
-  const downloadCandidate = async (candidate: PaperSearchCandidate, newVersion = false) => {
+  const downloadCandidate = async (candidate: PaperSearchCandidate, newVersion = false, previewOnly = false) => {
     const existing = papersRef.current.find(paper => sameSavedPaper(paper, candidate));
     if (existing && !newVersion) {
-      setResults(previous => previous.map(result => result.candidate.id === candidate.id
-        ? { ...result, state: "Already Saved", detail: "This exact source PDF is already in your local library.", progress: null, existingPaper: existing }
-        : result));
+      if (previewOnly) showPreview(existing);
+      else setResults(previous => previous.map(result => result.candidate.id === candidate.id
+          ? { ...result, state: "Already Saved", detail: "This exact source PDF is already in your local library.", progress: null, existingPaper: existing }
+          : result));
       return;
     }
 
@@ -202,12 +268,21 @@ export function PastPaperFinder() {
         verified: true,
         blob
       };
-      await db.putPastPaper(saved);
-      papersRef.current = [saved, ...papersRef.current];
-      setPapers(papersRef.current);
-      setResults(previous => previous.map(result => result.candidate.id === candidate.id
-        ? { ...result, state: "Saved Locally", detail: `${formatPaperSize(blob.size)} validated and saved in IndexedDB.`, progress: null, existingPaper: saved }
-        : result));
+      if (previewOnly) {
+        setPreviewPage(1);
+        setPreviewPageCount(0);
+        setPreview({ paper: saved, url: URL.createObjectURL(blob) });
+        setResults(previous => previous.map(result => result.candidate.id === candidate.id
+          ? { ...result, state: "Paper Found", detail: "Opened a temporary preview; the PDF was not saved to the library.", progress: null }
+          : result));
+      } else {
+        await db.putPastPaper(saved);
+        papersRef.current = [saved, ...papersRef.current];
+        setPapers(papersRef.current);
+        setResults(previous => previous.map(result => result.candidate.id === candidate.id
+          ? { ...result, state: "Saved Locally", detail: `${formatPaperSize(blob.size)} validated and saved in IndexedDB.`, progress: null, existingPaper: saved }
+          : result));
+      }
     } catch (cause) {
       setResults(previous => previous.map(result => result.candidate.id === candidate.id
         ? { ...result, state: "Download Failed", detail: cause instanceof Error ? cause.message : "The PDF could not be downloaded or saved.", progress: null }
@@ -264,9 +339,13 @@ export function PastPaperFinder() {
         if (statuses.some(status => status.state === "manual-required")) setNotice("No exact automatic match was safe to download. Use the official source page or import a PDF manually.");
         else setNotice("No matching paper was found in the supported source catalog.");
       } else {
-        for (let index = 0; index < candidates.length; index += 1) {
-          if (index > 0) await new Promise(resolve => window.setTimeout(resolve, 750));
-          await downloadCandidate(candidates[index]);
+        if (isTrial) {
+          setNotice("Select Preview PDF to view a paper temporarily. Downloads and saving to the library require full access.");
+        } else {
+          for (let index = 0; index < candidates.length; index += 1) {
+            if (index > 0) await new Promise(resolve => window.setTimeout(resolve, 750));
+            await downloadCandidate(candidates[index]);
+          }
         }
       }
     } catch (cause) {
@@ -434,7 +513,7 @@ export function PastPaperFinder() {
         </div>
       </fieldset>
       <button className="primary-button mt-5" disabled={searching || activeDownloadId !== null} onClick={() => void runSearch()}>
-        {searching || activeDownloadId ? <><LoaderCircle size={15} className="animate-spin"/> {activeDownloadId ? "Downloading PDF…" : "Searching Sources…"}</> : <><Search size={15}/> Find &amp; Download</>}
+        {searching || activeDownloadId ? <><LoaderCircle size={15} className="animate-spin"/> {activeDownloadId ? "Loading PDF preview…" : "Searching Sources…"}</> : <><Search size={15}/> {isTrial ? "Find papers" : "Find &amp; Download"}</>}
       </button>
       <div className="tip-card mt-5">
         <AlertCircle size={17} className="mt-0.5 shrink-0 text-[#c58a47]"/>
@@ -455,7 +534,7 @@ export function PastPaperFinder() {
             </div>
             <div><h3 className="font-semibold text-slate-800">{status.sourceName} · {stateLabel(status.state)}</h3><p className="mt-1 text-xs leading-5 text-slate-500">{status.message}</p></div>
           </div>
-          {status.state !== "searching" && status.state !== "found" && <a className="small-action shrink-0" href={status.sourceUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={14}/> Open source</a>}
+          {status.state !== "searching" && status.state !== "found" && <a className="small-action shrink-0" data-paid-feature href={status.sourceUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={14}/> Open source</a>}
         </article>)}
       </div>
       {searching && <div className="soft-card flex items-center gap-2 p-4 text-sm text-slate-600"><LoaderCircle size={16} className="animate-spin"/> Searching Sources…</div>}
@@ -468,7 +547,7 @@ export function PastPaperFinder() {
                 <h3 className="font-semibold text-slate-800">{result.candidate.title}</h3>
                 <p className="mt-1 text-xs text-slate-500">{result.candidate.examination} · {result.candidate.year} · {result.candidate.subject} · {result.candidate.medium} · {result.candidate.paperKind}</p>
                 <p className="mt-1 break-all text-[11px] text-slate-400">{result.candidate.filename} · {result.candidate.sourceName}</p>
-                <p className="mt-1 break-all text-[11px] text-slate-400">Published PDF: {result.candidate.directPdfUrl}</p>
+                {!isTrial && <p className="mt-1 break-all text-[11px] text-slate-400">Published PDF: {result.candidate.directPdfUrl}</p>}
                 <p className="mt-2 text-xs text-slate-600" role="status">{result.state}{result.detail ? ` · ${result.detail}` : ""}</p>
                 {result.state === "Downloading PDF" && <div className="mt-2 max-w-md">
                   <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#397b68] transition-[width] duration-150" style={{ width: `${result.progress ?? 8}%` }}/></div>
@@ -477,14 +556,15 @@ export function PastPaperFinder() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
+              {isTrial && result.state === "Paper Found" && <button className="small-action" disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, false, true)}><BookOpen size={14}/> Preview PDF</button>}
               {result.existingPaper && <>
-                <button className="small-action" onClick={() => openPaper(result.existingPaper!)}><FolderOpen size={14}/> Open</button>
+                <button className="small-action" data-paid-feature onClick={() => openPaper(result.existingPaper!)}><FolderOpen size={14}/> Open</button>
                 <button className="small-action" onClick={() => showPreview(result.existingPaper!)}><BookOpen size={14}/> Preview</button>
-                <button className="small-action" onClick={() => { showPreview(result.existingPaper!); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
-                <button className="small-action" onClick={() => exportPaper(result.existingPaper!)}><ArrowDownToLine size={14}/> Export</button>
-                {result.state === "Already Saved" && <button className="small-action" disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, true)}>Download New Version</button>}
+                <button className="small-action" data-paid-feature onClick={() => { showPreview(result.existingPaper!); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
+                <button className="small-action" data-paid-feature onClick={() => exportPaper(result.existingPaper!)}><ArrowDownToLine size={14}/> Export</button>
+                {result.state === "Already Saved" && <button className="small-action" data-paid-feature disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate, true)}>Download New Version</button>}
               </>}
-              {result.state === "Download Failed" && <button className="small-action" disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate)}>Retry download</button>}
+              {result.state === "Download Failed" && <button className="small-action" data-paid-feature disabled={activeDownloadId !== null} onClick={() => void downloadCandidate(result.candidate)}>Retry download</button>}
             </div>
           </div>
         </article>)}
@@ -546,15 +626,15 @@ export function PastPaperFinder() {
                   <h3 className="break-words font-semibold text-slate-800">{paper.title}</h3>
                   <p className="mt-1 text-xs text-slate-500">{paper.examination} · {paper.year} · {paper.subject} · {paper.medium} · {paper.paperKind}</p>
                   <p className="mt-1 break-all text-[11px] text-slate-400">{paper.originalFilename} · {formatPaperSize(paper.fileSize)} · Saved {new Date(paper.downloadedAt).toLocaleDateString()}</p>
-                  {paper.sourceUrl && <a className="mt-1 inline-flex items-center gap-1 break-all text-[11px] text-[#397b68] hover:underline" href={paper.sourceUrl} target="_blank" rel="noopener noreferrer">Original source page <ExternalLink size={11}/></a>}
+                  {paper.sourceUrl && <a className="mt-1 inline-flex items-center gap-1 break-all text-[11px] text-[#397b68] hover:underline" data-paid-feature href={paper.sourceUrl} target="_blank" rel="noopener noreferrer">Original source page <ExternalLink size={11}/></a>}
                   <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#eaf4ef] px-2 py-1 text-[10px] font-semibold text-[#2d6b58]"><CheckCircle2 size={12}/> Verified PDF · stored locally</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 md:justify-end">
                 <button className="small-action" onClick={() => showPreview(paper)}><BookOpen size={14}/> Preview</button>
-                <button className="small-action" onClick={() => openPaper(paper)}><FolderOpen size={14}/> Open</button>
-                <button className="small-action" onClick={() => { showPreview(paper); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
-                <button className="small-action" onClick={() => exportPaper(paper)}><ArrowDownToLine size={14}/> Export</button>
+                <button className="small-action" data-paid-feature onClick={() => openPaper(paper)}><FolderOpen size={14}/> Open</button>
+                <button className="small-action" data-paid-feature onClick={() => { showPreview(paper); window.setTimeout(() => previewFrame.current?.contentWindow?.print(), 250); }}><Printer size={14}/> Print</button>
+                <button className="small-action" data-paid-feature onClick={() => exportPaper(paper)}><ArrowDownToLine size={14}/> Export</button>
                 <button className="small-action" aria-label={`Rename ${paper.title}`} onClick={() => void renamePaper(paper)}><Pencil size={14}/></button>
                 <button className="small-action text-rose-700 hover:!bg-rose-50" aria-label={`Delete ${paper.title}`} onClick={() => void deletePaper(paper)}><Trash2 size={14}/></button>
               </div>
@@ -567,12 +647,14 @@ export function PastPaperFinder() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
           <div className="min-w-0"><h2 className="truncate font-semibold text-slate-800">{preview.paper.title}</h2><p className="mt-1 text-xs text-slate-500">{preview.paper.examination} · {preview.paper.year} · {preview.paper.subject} · {preview.paper.medium} · {formatPaperSize(preview.paper.fileSize)}</p></div>
           <div className="flex gap-2">
-            <button className="small-action" onClick={() => previewFrame.current?.contentWindow?.print()}><Printer size={14}/> Print</button>
-            <button className="small-action" onClick={() => exportPaper(preview.paper)}><ArrowDownToLine size={14}/> Export</button>
+              <button className="small-action" data-paid-feature onClick={() => previewFrame.current?.contentWindow?.print()}><Printer size={14}/> Print</button>
+              <button className="small-action" data-paid-feature onClick={() => exportPaper(preview.paper)}><ArrowDownToLine size={14}/> Export</button>
             <button className="small-action" aria-label="Close preview" onClick={closePreview}><X size={16}/></button>
           </div>
         </div>
-        <iframe ref={previewFrame} title={`${preview.paper.title} PDF preview`} src={preview.url} className="min-h-0 flex-1 bg-slate-100"/>
+          {isTrial
+            ? <><div className="flex items-center justify-center gap-3 border-b border-slate-100 py-2 text-xs"><button className="small-action" disabled={previewPage <= 1} onClick={() => setPreviewPage(page => Math.max(1, page - 1))}>Previous</button><span>Page {previewPage} / {previewPageCount || "…"}</span><button className="small-action" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}>Next</button></div><TrialPaperPreview url={preview.url} pageNumber={previewPage} onPageCount={setPreviewPageCount}/></>
+            : <iframe ref={previewFrame} title={`${preview.paper.title} PDF preview`} src={preview.url} className="min-h-0 flex-1 bg-slate-100"/>}
       </div>
     </div>}
   </div>{dialogHost}</LocalizedUi>;

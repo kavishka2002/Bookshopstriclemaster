@@ -428,6 +428,7 @@ textarea.cv-input { min-height: 78px; resize: vertical; line-height: 1.55; }
   .cv-preview-toolbar { align-items: flex-start; flex-direction: column; }
 }
 @media print {
+  html[data-trial-access="locked"] body { display: none !important; }
   @page { size: A4; margin: 0; }
   html.cv-print-mode,html.cv-print-mode body { width: auto !important; min-height: 0 !important; margin: 0 !important; background: white !important; }
   html.cv-print-mode body * { visibility: hidden !important; }
@@ -1304,6 +1305,7 @@ button { cursor: pointer; }
 }
 
 .auth-app-shell { display: flex; min-height: 100vh; flex-direction: column; }
+.trial-access-boundary { display: contents; }
 .auth-app-content { flex: 1 0 auto; }
 .auth-session-bar { position: sticky; z-index: 30; top: 0; display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 15px; border-bottom: 1px solid #e8edf0; background: rgb(255 255 255 / 96%); padding: 8px clamp(16px, 3vw, 42px); backdrop-filter: blur(12px); }
 .auth-session-brand, .auth-session-info, .auth-session-icon, .auth-manage-link, .auth-logout { display: flex; align-items: center; }
@@ -1326,6 +1328,17 @@ button { cursor: pointer; }
 .workspace-footer-contact a { display: inline-flex; align-items: center; gap: 7px; color: #4d7768; text-decoration: none; }
 .workspace-footer-contact a:hover { color: #285d4b; text-decoration: underline; }
 .workspace-footer-terms { border-left: 1px solid #e3eae5; padding-left: 18px; color: #788681; }
+.trial-payment-backdrop { position: fixed; z-index: 200; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(16 31 27 / 58%); padding: 20px; backdrop-filter: blur(5px); }
+.trial-payment-dialog { position: relative; width: min(100%, 430px); border: 1px solid #e1ebe4; border-radius: 20px; background: #fff; padding: 30px 26px 24px; color: #294138; text-align: center; box-shadow: 0 25px 80px rgb(14 37 27 / 28%); }
+.trial-payment-close { position: absolute; top: 12px; right: 12px; display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #e3eae5; border-radius: 10px; background: #fff; color: #65766e; }
+.trial-payment-icon { display: grid; width: 54px; height: 54px; place-items: center; margin: 0 auto 13px; border-radius: 16px; background: #eaf4ee; color: #347765; }
+.trial-payment-eyebrow { margin: 0; color: #608675; font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.trial-payment-dialog h2 { margin: 8px 0 0; color: #29483b; font-size: 20px; font-weight: 800; line-height: 1.5; }
+.trial-payment-copy { margin: 11px 0 0; color: #697a72; font-size: 12px; line-height: 1.8; }
+.trial-payment-price { margin: 16px 0; color: #2d7659; font-size: 25px; font-weight: 850; }
+.trial-payment-whatsapp { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; background: #168b49; padding: 0 16px; color: #fff; font-size: 12px; font-weight: 750; text-decoration: none; }
+.trial-payment-whatsapp:hover { background: #11773e; }
+.trial-payment-note { margin: 13px 0 0; color: #86938c; font-size: 10px; line-height: 1.6; }
 @media (max-width: 860px) {
   .workspace-footer { grid-template-columns: 1fr; gap: 11px; padding: 16px; }
   .workspace-footer-terms { border-top: 1px solid #e3eae5; border-left: 0; padding: 10px 0 0; }

@@ -860,7 +860,7 @@ export function CvBuilder() {
         </SectionPanel>
       </div>
       <aside className={`cv-preview-column ${mobileTab === "form" ? "mobile-hide" : ""}`}>
-        <div className="cv-preview-toolbar"><div><b>Live CV Preview</b><small>{templates.find(template => template.id === draft.templateId)?.name} · A4</small></div><div><button type="button" className="primary-button" disabled={!ready || !fontReady} onClick={() => void preparePrint()}><Download size={15}/> Download PDF</button><button type="button" className="secondary-button" disabled={!ready || !fontReady} onClick={() => void preparePrint()}><Printer size={15}/> Print CV</button></div></div>
+        <div className="cv-preview-toolbar"><div><b>Live CV Preview</b><small>{templates.find(template => template.id === draft.templateId)?.name} · A4</small></div><div><button type="button" className="primary-button" data-paid-feature disabled={!ready || !fontReady} onClick={() => void preparePrint()}><Download size={15}/> Download PDF</button><button type="button" className="secondary-button" data-paid-feature disabled={!ready || !fontReady} onClick={() => void preparePrint()}><Printer size={15}/> Print CV</button></div></div>
         <p className="cv-pdf-guidance">The browser print window opens. Select <b>Save as PDF</b> to download a selectable PDF, or choose a printer.</p>
         {!fontReady && <p className="cv-loading" role="status">Loading document fonts…</p>}
         <div className="cv-paper-stage"><div className="cv-print-root"><CvDocument draft={draft} photoUrl={photoUrl} selectedTextId={selectedTextId} onSelectText={onSelectText}/></div></div>

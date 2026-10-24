@@ -18,6 +18,7 @@ export interface LocalAccount {
   role: AccountRole;
   active: boolean;
   mustChangePassword: boolean;
+  isTrial?: boolean;
   salt: string;
   passwordHash: string;
   provisionedPasswordHash?: string;
@@ -116,7 +117,8 @@ export async function initializeLocalAccounts(): Promise<void> {
     return {
       id: seed.id, username, normalizedUsername: normalize(username), bookshopName: seed.shopName.trim(),
       ownerContact: seed.ownerContact, role, active: seed.active,
-      mustChangePassword: seed.mustChangePassword ?? role === "shop", salt: seed.salt, passwordHash: seed.passwordHash,
+      mustChangePassword: seed.mustChangePassword ?? role === "shop", isTrial: seed.isTrial ?? false,
+      salt: seed.salt, passwordHash: seed.passwordHash,
       provisionedPasswordHash: seed.passwordHash,
       createdAt: seed.createdAt, failedAttempts: 0, lockedUntil: 0
     };

@@ -9,6 +9,7 @@ export interface ProvisionedAccountSeed {
   createdAt: number;
   role?: "admin" | "shop";
   mustChangePassword?: boolean;
+  isTrial?: boolean;
 }
 
 export const provisionedAccountSeeds: ProvisionedAccountSeed[] = [
@@ -23,5 +24,18 @@ export const provisionedAccountSeeds: ProvisionedAccountSeed[] = [
     createdAt: 1792755911000,
     role: "admin",
     mustChangePassword: false
+  },
+  {
+    id: "trial-t123",
+    username: "T123",
+    shopName: "PaperBloom Free Trial",
+    ownerContact: "",
+    passwordHash: "QA8p/eTYA9aH4AFYRHIaCY9Dq8BrNJXNvOghYr4t7Ao=",
+    salt: "uxIii+wTkujl2+PviPieKQ==",
+    active: true,
+    createdAt: 1792866000000,
+    role: "shop",
+    mustChangePassword: false,
+    isTrial: true
   }
 ];

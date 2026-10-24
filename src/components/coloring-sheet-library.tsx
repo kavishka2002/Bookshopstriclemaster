@@ -343,7 +343,7 @@ export function ColoringSheetLibrary() {
                 <p className="mt-1 text-[11px] text-slate-400">{sheet.mediaType === "pdf" ? "PDF" : "Image"} · {formatFileSize(sheet.sizeBytes)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button className="small-action flex-1" onClick={() => openPreview(sheet)}><BookOpen size={13}/> Preview</button>
-                  <button className="small-action flex-1" onClick={() => openForPrint(sheet)}><Printer size={13}/> Print</button>
+                  <button className="small-action flex-1" data-paid-feature onClick={() => openForPrint(sheet)}><Printer size={13}/> Print</button>
                   <a className="small-action flex-1" href={sheet.url} download><Download size={13}/> Save {sheet.mediaType === "pdf" ? "PDF" : "image"}</a>
                 </div>
               </div>
@@ -365,7 +365,7 @@ export function ColoringSheetLibrary() {
               <span className="min-w-16 text-center text-xs text-slate-500">Page {previewPage} / {previewPageCount || "…"}</span>
               <button className="icon-action !h-8 !w-8" aria-label="Next page" disabled={previewPageCount === 0 || previewPage >= previewPageCount} onClick={() => setPreviewPage(page => Math.min(previewPageCount, page + 1))}><ChevronRight size={16}/></button>
             </div>}
-            <button className="secondary-button !py-2" title={selectedSheet.mediaType === "pdf" ? "Opens the PDF in a new tab; use the PDF viewer's Print control." : "Print this picture on an A4 page."} onClick={() => openForPrint(selectedSheet)}><Printer size={14}/> Print</button>
+            <button className="secondary-button !py-2" data-paid-feature title={selectedSheet.mediaType === "pdf" ? "Opens the PDF in a new tab; use the PDF viewer's Print control." : "Print this picture on an A4 page."} onClick={() => openForPrint(selectedSheet)}><Printer size={14}/> Print</button>
             <a className="secondary-button !py-2" href={selectedSheet.url} download><Download size={14}/> Save {selectedSheet.mediaType === "pdf" ? "PDF" : "image"}</a>
             <button className="icon-action" aria-label="Close preview" onClick={() => setSelectedSheet(null)}><X size={18}/></button>
           </div>

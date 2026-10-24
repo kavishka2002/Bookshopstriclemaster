@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { provisionedAccountSeeds } from "../data/local-account-seeds";
 import { changeLocalShopName, createPasswordRecord, generateInitialPassword, validatePassword, validateUsername } from "./local-auth";
 
 describe("offline account input and password handling", () => {
+  it("provisions the trial account without replacing the existing administrator", () => {
+    const trial = provisionedAccountSeeds.find(account => account.username === "T123");
+    expect(trial).toMatchObject({ role: "shop", shopName: "PaperBloom Free Trial", active: true, mustChangePassword: false, isTrial: true });
+    expect(trial?.passwordHash).not.toBe("1234");
+    expect(provisionedAccountSeeds.filter(account => account.role === "admin")).toHaveLength(1);
+  });
+
   it("validates usernames without accepting whitespace or unsafe characters", () => {
     expect(validateUsername("P321")).toBe("P321");
     expect(validateUsername("shop.owner_1")).toBe("shop.owner_1");
