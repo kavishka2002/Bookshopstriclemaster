@@ -24,7 +24,7 @@ import { formatGradeForLanguage } from "@/lib/grade";
 import { englishSubjectName } from "@/lib/subject-labels";
 import { StickerDecoration } from "@/components/sticker-decoration";
 import { CustomPrintStudio } from "@/components/custom-print-studio";
-import { PastPaperFinder } from "@/components/past-paper-finder";
+import { OlPastPapers } from "@/components/ol-past-papers";
 import { ColoringSheetLibrary } from "@/components/coloring-sheet-library";
 import { CvBuilder } from "@/components/cv-builder";
 import { DocumentLibrary } from "@/components/document-library";
@@ -843,7 +843,7 @@ export function StickerStudio() {
     if (section === "Custom Print Studio") return <CustomPrintStudio assets={assets} assetUrls={assetUrls} onUpload={onUpload}/>;
     if (section === "Past Paper Finder") return isTrial
       ? <div className="empty-large"><div className="empty-illustration"><Files size={28}/></div><h3>Past papers require full access</h3><p>Past Paper Finder is not available in the free trial.</p></div>
-      : <PastPaperFinder/>;
+      : <OlPastPapers/>;
     if (section === "Picture Colouring Library") return <ColoringSheetLibrary/>;
     if (section === "CV Builder") return <CvBuilder/>;
     if (section === "Documents & Forms") return <DocumentLibrary/>;
