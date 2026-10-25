@@ -70,6 +70,7 @@ const mediumNames: Record<string, string> = {
 
 export type OlPaper = {
   id: string;
+  exam: PaperExam;
   year: number;
   subject: string;
   medium: string;
@@ -77,6 +78,8 @@ export type OlPaper = {
   fileName: string;
   url: string;
 };
+
+export type PaperExam = "O/L" | "Grade 5 Scholarship";
 
 export function createOlPaper(folderName: string, fileName: string): OlPaper | null {
   const folderMatch = /^(\d{4}) ol$/i.exec(folderName);
@@ -106,10 +109,33 @@ export function createOlPaper(folderName: string, fileName: string): OlPaper | n
 
   return {
     id: `${year}-${fileName}`,
+    exam: "O/L",
     year,
     subject,
     medium: mediumNames[medium] ?? "Medium not specified",
     syllabus,
+    fileName,
+    url: `/papers/${encodeURIComponent(folderName)}/${encodeURIComponent(fileName)}`
+  };
+}
+
+export function createScholarshipPaper(folderName: string, fileName: string): OlPaper | null {
+  if (!/^(?:scolarship paper|scholarship paper|grade 5 scholarship)$/i.test(folderName) || !/\.pdf$/i.test(fileName)) {
+    return null;
+  }
+
+  const yearMatch = /^(\d{4})-grade-5-scholarship-examination-(sinhala|english|tamil)\.pdf$/i.exec(fileName);
+  if (!yearMatch) return null;
+
+  const [, yearString, medium] = yearMatch;
+  const year = Number(yearString);
+  return {
+    id: `${year}-${fileName}`,
+    exam: "Grade 5 Scholarship",
+    year,
+    subject: "Grade 5 Scholarship",
+    medium: mediumNames[medium.toLowerCase()] ?? "Medium not specified",
+    syllabus: null,
     fileName,
     url: `/papers/${encodeURIComponent(folderName)}/${encodeURIComponent(fileName)}`
   };

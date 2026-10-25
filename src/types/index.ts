@@ -74,6 +74,12 @@ export interface StickerDesign {
   showCutline: boolean;
   texts: TextElement[];
   printSubjects?: string[];
+  defaultCardName?: string;
+  defaultCardGrade?: string;
+  defaultCardSchool?: string;
+  englishCardName?: string;
+  englishCardGrade?: string;
+  englishCardSchool?: string;
   images: DesignImage[];
   favourite: boolean;
   createdAt: number;
@@ -122,4 +128,5 @@ export interface SubjectPreset {
   gradeBand: string;
   stream?: string;
   subjects: Array<{ en: string; si: string }>;
+  starterVersion?: number;
 }

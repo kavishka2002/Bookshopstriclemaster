@@ -2,12 +2,13 @@
 
 import { ArrowUpRight, BookOpen, FileText, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { OlPaper } from "@/lib/ol-papers";
+import type { OlPaper, PaperExam } from "@/lib/ol-papers";
 
-const examinationYears = Array.from({ length: 2025 - 2007 + 1 }, (_, index) => 2025 - index);
+const paperExams: PaperExam[] = ["O/L", "Grade 5 Scholarship"];
 
 export function OlPastPapers() {
   const [papers, setPapers] = useState<OlPaper[]>([]);
+  const [exam, setExam] = useState<PaperExam>("O/L");
   const [year, setYear] = useState("all");
   const [subject, setSubject] = useState("all");
   const [search, setSearch] = useState("");
@@ -36,18 +37,25 @@ export function OlPastPapers() {
     return () => controller.abort();
   }, []);
 
+  const examinationYears = useMemo(
+    () => [...new Set(papers.filter(paper => paper.exam === exam).map(paper => paper.year))]
+      .sort((left, right) => right - left),
+    [exam, papers]
+  );
   const subjects = useMemo(
-    () => [...new Set(papers.map(paper => paper.subject))].sort((left, right) => left.localeCompare(right)),
-    [papers]
+    () => [...new Set(papers.filter(paper => paper.exam === exam).map(paper => paper.subject))]
+      .sort((left, right) => left.localeCompare(right)),
+    [exam, papers]
   );
   const filteredPapers = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return papers.filter(paper =>
-      (year === "all" || paper.year === Number(year))
+      paper.exam === exam
+      && (year === "all" || paper.year === Number(year))
       && (subject === "all" || paper.subject === subject)
       && (!query || `${paper.subject} ${paper.year} ${paper.medium} ${paper.syllabus ?? ""}`.toLocaleLowerCase().includes(query))
     );
-  }, [papers, search, subject, year]);
+  }, [exam, papers, search, subject, year]);
   const papersByYear = useMemo(() => {
     const groups = new Map<number, OlPaper[]>();
     for (const paper of filteredPapers) {
@@ -57,7 +65,18 @@ export function OlPastPapers() {
     }
     return [...groups.entries()];
   }, [filteredPapers]);
-  const selectedYearHasPapers = year === "all" || papers.some(paper => paper.year === Number(year));
+  const selectedYearHasPapers = year === "all" || papers.some(paper =>
+    paper.exam === exam && paper.year === Number(year)
+  );
+  const examPaperCount = papers.filter(paper => paper.exam === exam).length;
+
+  const changeExam = (nextExam: PaperExam) => {
+    setExam(nextExam);
+    setYear("all");
+    setSubject("all");
+    setSearch("");
+  };
+
   return (
     <section className="ol-past-papers soft-card" aria-labelledby="ol-past-papers-title">
       <header className="ol-past-papers-header">
@@ -65,21 +84,35 @@ export function OlPastPapers() {
           <span className="ol-past-papers-icon" aria-hidden="true"><BookOpen size={19}/></span>
           <div>
             <p className="ol-past-papers-eyebrow">STUDY · PRACTISE · SUCCEED</p>
-            <h2 id="ol-past-papers-title">O/L Past Papers</h2>
-            <p className="ol-past-papers-description">Browse by year or subject, then open a PDF directly.</p>
+            <h2 id="ol-past-papers-title">Past Papers</h2>
+            <p className="ol-past-papers-description">Choose an examination, then filter by year or subject.</p>
           </div>
         </div>
         <div className="ol-past-papers-total">
-          <strong>{loading || error ? "—" : papers.length}</strong>
+          <strong>{loading || error ? "—" : examPaperCount}</strong>
           <span>papers available</span>
         </div>
       </header>
 
       <div className="ol-past-papers-filters">
         <label className="ol-past-papers-field">
+          <span>Examination</span>
+          <select
+            value={exam}
+            onChange={event => {
+              const selectedExam = paperExams.find(paperExam => paperExam === event.target.value);
+              if (selectedExam) changeExam(selectedExam);
+            }}
+          >
+            {paperExams.map(paperExam => (
+              <option key={paperExam} value={paperExam}>{paperExam}</option>
+            ))}
+          </select>
+        </label>
+        <label className="ol-past-papers-field">
           <span>Examination year</span>
           <select value={year} onChange={event => setYear(event.target.value)}>
-            <option value="all">All years</option>
+            <option value="all">All available years</option>
             {examinationYears.map(examinationYear => (
               <option key={examinationYear} value={examinationYear}>{examinationYear}</option>
             ))}
@@ -116,12 +149,12 @@ export function OlPastPapers() {
             <div className="ol-past-papers-result-count">
               Showing <strong>{filteredPapers.length}</strong> {filteredPapers.length === 1 ? "paper" : "papers"}
               {subject !== "all" ? <> for <strong>{subject}</strong></> : null}
-              {year === "all" && subject !== "all" ? " across all available years" : null}
+              {year === "all" && subject !== "all" ? ` across all available ${exam} years` : null}
             </div>
             {papersByYear.map(([paperYear, yearPapers]) => (
               <section className="ol-past-papers-year-group" key={paperYear} aria-labelledby={`ol-year-${paperYear}`}>
                 <div className="ol-past-papers-year-heading">
-                  <h3 id={`ol-year-${paperYear}`}>{paperYear} O/L</h3>
+                  <h3 id={`ol-year-${paperYear}`}>{paperYear} {exam}</h3>
                   <span>{yearPapers.length} {yearPapers.length === 1 ? "paper" : "papers"}</span>
                 </div>
                 <div className="ol-past-papers-grid">
@@ -152,7 +185,7 @@ export function OlPastPapers() {
           </>
         ) : !selectedYearHasPapers ? (
           <div className="ol-past-papers-state">
-            <h3>No local PDFs for {year}</h3>
+            <h3>No local {exam} PDFs for {year}</h3>
             <p>There are no PDF files for this year in the local papers folder.</p>
           </div>
         ) : (
@@ -171,7 +204,9 @@ export function OlPastPapers() {
       </div>
       {!loading && !error && year === "all" && (
         <p className="ol-past-papers-note">
-          Local PDFs are available for 2015–2024. Select a subject to view its papers from every available year.
+          {exam === "O/L"
+            ? "Select a subject to see its O/L papers across all available years."
+            : "Grade 5 Scholarship papers are available from 2017 to 2026."}
         </p>
       )}
     </section>

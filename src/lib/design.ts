@@ -1,4 +1,5 @@
 import type { LanguageMode, StickerDesign, StickerTemplate, TextElement } from "@/types";
+import { isEnglishCardSubject } from "./subject-labels";
 
 export function createDesign(
   name: string,
@@ -47,14 +48,30 @@ export function createSubjectDesign(
   values: { name: string; grade: string; school: string },
   subjects: string[],
   template: StickerTemplate,
-  language: LanguageMode
+  language: LanguageMode,
+  englishCardDetails?: { name: string; school: string; grade: string }
 ): StickerDesign {
   const selectedSubjects = subjects.map(item => item.trim()).filter(Boolean);
-  const subject = selectedSubjects[0] ?? "";
-  const design = createDesign(subject ? `${name} - ${subject}` : name, {
-    ...values, subject
+  const subject = (englishCardDetails ? selectedSubjects.find(isEnglishCardSubject) : undefined)
+    ?? selectedSubjects[0]
+    ?? "";
+  const isEnglishPreview = isEnglishCardSubject(subject);
+  const design = createDesign(name, {
+    ...values,
+    name: isEnglishPreview ? englishCardDetails?.name ?? values.name : values.name,
+    grade: isEnglishPreview ? englishCardDetails?.grade ?? values.grade : values.grade,
+    school: isEnglishPreview ? englishCardDetails?.school ?? values.school : values.school,
+    subject
   }, template, language);
   design.printSubjects = selectedSubjects;
+  if (selectedSubjects.some(isEnglishCardSubject) && englishCardDetails) {
+    design.defaultCardName = values.name;
+    design.defaultCardGrade = values.grade;
+    design.defaultCardSchool = values.school;
+    design.englishCardName = englishCardDetails.name;
+    design.englishCardGrade = englishCardDetails.grade;
+    design.englishCardSchool = englishCardDetails.school;
+  }
   return design;
 }
 

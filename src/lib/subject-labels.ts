@@ -1,4 +1,5 @@
 import { subjectPresets } from "../data/templates";
+import type { LanguageMode } from "@/types";
 
 const sinhalaSubjectNames: Record<string, string> = {
   "ගණිතය": "Mathematics",
@@ -27,6 +28,11 @@ const sinhalaSubjectNames: Record<string, string> = {
 const normalize = (value: string) => value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 const englishSubjectNames = new Map<string, string>();
 
+export function isEnglishCardSubject(subject: string): boolean {
+  const label = subject.split(" · ").at(-1)?.trim() ?? subject.trim();
+  return /^english(?:\s|$)/i.test(label);
+}
+
 for (const subject of Object.values(subjectPresets).flat()) {
   const englishName = /[\u0D80-\u0DFF]/.test(subject.en) ? subject.si : subject.en;
   if (!/[\u0D80-\u0DFF]/.test(englishName)) {
@@ -48,4 +54,11 @@ export function englishSubjectName(subject: { en: string; si: string }): string 
     if (!/[\u0D80-\u0DFF]/.test(name)) return name.trim();
   }
   return "Custom subject";
+}
+
+export function subjectNameForLanguage(subject: { en: string; si: string }, language: LanguageMode): string {
+  if (language === "English" || /^english(?:\s|$)/i.test(subject.en.trim())) {
+    return englishSubjectName(subject);
+  }
+  return subject.si.trim() || englishSubjectName(subject);
 }

@@ -49,6 +49,51 @@ describe("subject-specific A4 printing", () => {
     }
   });
 
+  it("uses English name and school only on the English subject card", () => {
+    const mixedDesign = createSubjectDesign("කවිඳු පෙරේරා", {
+      name: "කවිඳු පෙරේරා", grade: "5 ශ්‍රේණිය", school: "ABC විද්‍යාලය"
+    }, ["සිංහල", "English"], template, "Sinhala", {
+      name: "Kavindu Perera",
+      grade: "Grade 5",
+      school: "ABC College"
+    });
+    const subjects = getPrintSubjects(mixedDesign);
+    const sinhalaCard = createPrintSticker(mixedDesign, "සිංහල");
+    const englishCard = createPrintSticker(mixedDesign, "English");
+
+    expect(subjects).toEqual(["සිංහල", "English"]);
+    expect(mixedDesign.texts.find(text => text.field === "subject")?.text).toBe("English");
+    expect(sinhalaCard.texts.find(text => text.field === "name")?.text).toBe("කවිඳු පෙරේරා");
+    expect(sinhalaCard.texts.find(text => text.field === "school")?.text).toBe("ABC විද්‍යාලය");
+    expect(sinhalaCard.texts.find(text => text.field === "subject")?.text).toBe("සිංහල");
+    expect(englishCard.texts.find(text => text.field === "name")?.text).toBe("Kavindu Perera");
+    expect(englishCard.texts.find(text => text.field === "school")?.text).toBe("ABC College");
+    expect(englishCard.texts.find(text => text.field === "subject")?.text).toBe("English");
+    expect(englishCard.texts.find(text => text.field === "grade")?.text).toBe("Grade 5");
+  });
+
+  it.each(["English Workbook", "English Book", "English Textbook", "English Pupil Book 1-5"])(
+    "uses English name, school, and grade on %s cards only",
+    subject => {
+      const mixedDesign = createSubjectDesign("කවිඳු පෙරේරා", {
+        name: "කවිඳු පෙරේරා", grade: "5 ශ්‍රේණිය", school: "ABC විද්‍යාලය"
+      }, ["ගණිතය", subject], template, "Sinhala", {
+        name: "Kavindu Perera",
+        grade: "Grade 5",
+        school: "ABC College"
+      });
+      const sinhalaCard = createPrintSticker(mixedDesign, "ගණිතය");
+      const englishBookCard = createPrintSticker(mixedDesign, subject);
+
+      expect(englishBookCard.texts.find(text => text.field === "name")?.text).toBe("Kavindu Perera");
+      expect(englishBookCard.texts.find(text => text.field === "school")?.text).toBe("ABC College");
+      expect(englishBookCard.texts.find(text => text.field === "grade")?.text).toBe("Grade 5");
+      expect(sinhalaCard.texts.find(text => text.field === "name")?.text).toBe("කවිඳු පෙරේරා");
+      expect(sinhalaCard.texts.find(text => text.field === "school")?.text).toBe("ABC විද්‍යාලය");
+      expect(sinhalaCard.texts.find(text => text.field === "grade")?.text).toBe("5 ශ්‍රේණිය");
+    }
+  );
+
   it("calculates pages from the expanded per-subject copy count", () => {
     const totalStickers = getPrintStickerCount(8, getPrintSubjects(design));
     expect(calculateSheetLayout(design.widthMm, design.heightMm, totalStickers)).toMatchObject({

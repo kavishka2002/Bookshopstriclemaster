@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createStarterAsset, starterArtwork, starterTemplates, subjectPresets } from "@/data/templates";
+import { createStarterAsset, englishBookSubjectOptions, starterArtwork, starterTemplates, subjectPresets } from "@/data/templates";
 import { newDesignTemplateIds, newDesignTemplates } from "@/data/new-templates";
 import { customArtworkAssets, customArtworkTemplateIds, customArtworkTemplates } from "@/data/custom-art-templates";
 import { printableLabelCategories, printableLabelCategoryById, printableLabelTemplateIds, printableLabelTemplates, type PrintableLabelCategory } from "@/data/printable-label-templates";
@@ -21,7 +21,8 @@ import { englishFonts, fontPreviewText, fontCategories, normalizeFontSelection, 
 import { initializeSinglish, transliterateSinglish, updateLiveTransliterationDraft } from "@/lib/sinhala";
 import { getDisplayText, getFittedFontSize } from "@/lib/text-layout";
 import { formatGradeForLanguage } from "@/lib/grade";
-import { englishSubjectName } from "@/lib/subject-labels";
+import { addMissingStarterSubjects } from "@/lib/subject-presets";
+import { englishSubjectName, isEnglishCardSubject, subjectNameForLanguage } from "@/lib/subject-labels";
 import { StickerDecoration } from "@/components/sticker-decoration";
 import { CustomPrintStudio } from "@/components/custom-print-studio";
 import { OlPastPapers } from "@/components/ol-past-papers";
@@ -175,8 +176,9 @@ export function StickerStudio() {
   const [typingMode, setTypingMode] = useState<TextInputMode>("English");
   const [transliterationStatus, setTransliterationStatus] = useState<"loading" | "ready" | "error">("loading");
   const [transliterationError, setTransliterationError] = useState("");
-  const [student, setStudent] = useState({ name: "", grade: "", school: "", customSubject: "", stream: "" });
+  const [student, setStudent] = useState({ name: "", grade: "", school: "", customSubject: "", stream: "", englishName: "", englishSchool: "" });
   const [subjectsSelected, setSubjectsSelected] = useState<string[]>([]);
+  const [customSubjects, setCustomSubjects] = useState<string[]>([]);
   const [subjectSearch, setSubjectSearch] = useState("");
   const [kind, setKind] = useState<"sticker" | "cover">("sticker");
   const [selectedTemplateId, setSelectedTemplateId] = useState("art-tiger");
@@ -238,8 +240,22 @@ export function StickerStudio() {
         ...storedTemplates.filter(template => template.userCreated && !starterTemplateIds.has(template.id) && !allNewTemplateIds.has(template.id))
       ];
       const mergedAssets = await loadStarterAssets(storedAssets);
-      if (storedSubjectPresets.length === 0) await Promise.all(Object.entries(subjectPresets).map(([gradeBand, subjects]) => db.putSubjectPreset({ gradeBand, subjects })));
-      const mergedSubjects = { ...subjectPresets, ...Object.fromEntries(storedSubjectPresets.map(preset => [preset.gradeBand, preset.subjects])) };
+      const storedPresetsByBand = new Map(storedSubjectPresets.map(preset => [preset.gradeBand, preset]));
+      const mergedSubjects = { ...subjectPresets };
+      await Promise.all(Object.entries(subjectPresets).map(async ([gradeBand, starterSubjects]) => {
+        const storedPreset = storedPresetsByBand.get(gradeBand);
+        if (!storedPreset) {
+          await db.putSubjectPreset({ gradeBand, subjects: starterSubjects, starterVersion: 1 });
+          return;
+        }
+        if ((storedPreset.starterVersion ?? 0) < 1) {
+          const subjects = addMissingStarterSubjects(storedPreset.subjects, starterSubjects);
+          await db.putSubjectPreset({ ...storedPreset, subjects, starterVersion: 1 });
+          mergedSubjects[gradeBand] = subjects;
+          return;
+        }
+        mergedSubjects[gradeBand] = storedPreset.subjects;
+      }));
       setDesigns(storedDesigns.map(normalizeDesign).sort((a, b) => b.updatedAt - a.updatedAt));
       setTemplates(mergedTemplates);
       setSubjectOptions(mergedSubjects);
@@ -320,9 +336,57 @@ export function StickerStudio() {
   const availableSubjects = useMemo(() => {
     const grade = Number(student.grade.replace(/\D/g, ""));
     const band = grade >= 12 ? "12-13" : grade >= 6 ? "6-11" : "1-5";
-    return subjectOptions[band] ?? subjectOptions["1-5"];
+    const gradeSubjects = subjectOptions[band] ?? subjectOptions["1-5"];
+    const subjectsByName = new Map(gradeSubjects.map(subject => [subject.en, subject]));
+    for (const subject of englishBookSubjectOptions) subjectsByName.set(subject.en, subject);
+    return [...subjectsByName.values()];
   }, [student.grade, subjectOptions]);
   const unavailableSubjects = subjectsSelected.filter(value => !availableSubjects.some(subject => subject.en === value));
+  const selectedSubjectLabels = useMemo(() => [
+    ...subjectsSelected.map(value => {
+      const option = availableSubjects.find(subject => subject.en === value);
+      const subject = option ? subjectNameForLanguage(option, language) : value;
+      return student.stream ? `${student.stream} · ${subject}` : subject;
+    }),
+    ...customSubjects,
+    student.customSubject.trim()
+  ].filter(Boolean), [availableSubjects, customSubjects, language, student.customSubject, student.stream, subjectsSelected]);
+  const addCustomSubject = () => {
+    const value = student.customSubject.trim();
+    if (!value) return;
+    const existingSubjects = [...subjectsSelected, ...customSubjects].map(subject => subject.trim().toLocaleLowerCase());
+    if (existingSubjects.includes(value.toLocaleLowerCase())) {
+      setError("That subject has already been added.");
+      return;
+    }
+    if (isEnglishCardSubject(value)) {
+      const includesSinhala = (text: string) => /[\u0D80-\u0DFF]/.test(text);
+      setStudent(previous => ({
+        ...previous,
+        englishName: previous.englishName || (includesSinhala(previous.name) ? "" : previous.name),
+        englishSchool: previous.englishSchool || (includesSinhala(previous.school) ? "" : previous.school)
+      }));
+    }
+    setCustomSubjects(previous => [...previous, value]);
+    setStudent(previous => ({ ...previous, customSubject: "" }));
+    transliterationDrafts.current.customSubject = { rawValue: "", displayedValue: "" };
+    setError("");
+  };
+  const toggleSubjectSelection = (value: string) => {
+    if (subjectsSelected.includes(value)) {
+      setSubjectsSelected(previous => previous.filter(subject => subject !== value));
+      return;
+    }
+    if (isEnglishCardSubject(value)) {
+      const includesSinhala = (text: string) => /[\u0D80-\u0DFF]/.test(text);
+      setStudent(previous => ({
+        ...previous,
+        englishName: previous.englishName || (includesSinhala(previous.name) ? "" : previous.name),
+        englishSchool: previous.englishSchool || (includesSinhala(previous.school) ? "" : previous.school)
+      }));
+    }
+    setSubjectsSelected(previous => [...previous, value]);
+  };
   const filteredSubjects = useMemo(() => {
     const queries = new Set([subjectSearch.toLocaleLowerCase()]);
     if (language === "Sinhala" && transliterationStatus === "ready") queries.add(transliterateSinglish(subjectSearch).toLocaleLowerCase());
@@ -416,9 +480,13 @@ export function StickerStudio() {
     const updatedTexts = design.texts.map(text => text.id === target.id ? { ...text, ...patch } : text);
     const previousCustomCount = design.texts.filter(text => text.field === "custom" && text.visible && text.text.trim()).length;
     const nextCustomCount = updatedTexts.filter(text => text.field === "custom" && text.visible && text.text.trim()).length;
+    const englishPreview = design.printSubjects?.some(isEnglishCardSubject)
+      && isEnglishCardSubject(design.texts.find(text => text.field === "subject")?.text ?? "");
     patchDesign({
       texts: previousCustomCount === nextCustomCount ? updatedTexts : reflowForCustomFields(updatedTexts),
-      ...(selectedSubjects ? { printSubjects: selectedSubjects } : {})
+      ...(selectedSubjects ? { printSubjects: selectedSubjects } : {}),
+      ...(englishPreview && target.field === "name" && patch.text !== undefined ? { englishCardName: patch.text } : {}),
+      ...(englishPreview && target.field === "school" && patch.text !== undefined ? { englishCardSchool: patch.text } : {})
     });
   };
   const updateStickerTextInput = (text: TextElement, nextValue: string, selectionStart: number, isComposing = false) => {
@@ -544,6 +612,26 @@ export function StickerStudio() {
   };
   const generateDesign = async (template?: StickerTemplate) => {
     if (!student.name.trim()) { setError("Add the student name to create a sticker."); return; }
+    const englishSelected = selectedSubjectLabels.some(isEnglishCardSubject);
+    const hasSinhalaText = (value: string) => /[\u0D80-\u0DFF]/.test(value);
+    const englishCardName = student.englishName.trim() || (!hasSinhalaText(student.name) ? student.name.trim() : "");
+    const englishCardSchool = student.englishSchool.trim() || (!hasSinhalaText(student.school) ? student.school.trim() : "");
+    const gradeNumber = student.grade.match(/\d+/)?.[0];
+    const englishCardGrade = gradeNumber
+      ? `Grade ${gradeNumber}`
+      : hasSinhalaText(student.grade) ? "" : student.grade.trim();
+    if (englishSelected && (!englishCardName || hasSinhalaText(englishCardName))) {
+      setError("Enter the student name in English for the English subject card.");
+      return;
+    }
+    if (englishSelected && (hasSinhalaText(englishCardSchool) || (student.school.trim() && !englishCardSchool))) {
+      setError("Enter the school name in English for the English subject card.");
+      return;
+    }
+    if (englishSelected && student.grade.trim() && (!englishCardGrade || hasSinhalaText(englishCardGrade))) {
+      setError("Enter a grade number for the English subject card.");
+      return;
+    }
     if (selectedTemplateId === CUSTOM_SIZE_TEMPLATE_ID && (
       !customWidthInput.trim() || !customHeightInput.trim()
       || !isSupportedCustomSize(
@@ -565,18 +653,12 @@ export function StickerStudio() {
         heightMm: customHeightMm
       }
       : templates.find(t => t.id === selectedTemplateId && t.kind === kind) ?? templates.find(t => t.kind === kind && t.favourite) ?? templates.find(t => t.kind === kind) ?? starterTemplates[0]);
-    const translatedSubjects = subjectsSelected.map(value => {
-      const option = availableSubjects.find(subject => subject.en === value);
-      if (!option) return value;
-      return englishSubjectName(option);
-    });
-    const subjectLabels = [
-      ...translatedSubjects.map(subject => student.stream ? `${student.stream} · ${subject}` : subject),
-      student.customSubject.trim()
-    ].filter(Boolean);
+    const subjectLabels = selectedSubjectLabels;
     const nextDesign = createSubjectDesign(student.name.trim(), {
       name: student.name.trim(), grade: formatGradeForLanguage(student.grade, language), school: student.school
-    }, subjectLabels, selectedTemplate, language);
+    }, subjectLabels, selectedTemplate, language, englishSelected
+      ? { name: englishCardName, grade: englishCardGrade, school: englishCardSchool }
+      : undefined);
     if (selectedTemplate.id === CUSTOM_SIZE_TEMPLATE_ID) nextDesign.customDimensionUnit = customUnit;
     if (nextDesign.customDimensionUnit) {
       setDesignWidthInput(formatMeasurement(nextDesign.widthMm, nextDesign.customDimensionUnit));
@@ -593,7 +675,7 @@ export function StickerStudio() {
       setSelectedText("name");
       setError("");
       setMessage(subjectLabels.length > 1
-        ? `The editor shows ${subjectLabels[0]}; A4 printing will include all ${subjectLabels.length} selected subjects.`
+        ? `The editor shows ${saved.texts.find(text => text.field === "subject")?.text || subjectLabels[0]}; A4 printing will include all ${subjectLabels.length} selected subjects.`
         : "Your sticker is ready to personalize.");
       setSection("Create sticker");
     } catch (e) {
@@ -771,7 +853,7 @@ export function StickerStudio() {
   const saveSubjectGroup = async (gradeBand: string, subjects: Array<{ en: string; si: string }>) => {
     setSubjectOptions(previous => ({ ...previous, [gradeBand]: subjects }));
     try {
-      await db.putSubjectPreset({ gradeBand, subjects });
+      await db.putSubjectPreset({ gradeBand, subjects, starterVersion: 1 });
       setMessage("Subject presets saved on this device.");
       setError("");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not save these subject presets."); }
@@ -900,19 +982,27 @@ export function StickerStudio() {
         ?? templates.find(template => template.kind === kind)
         ?? starterTemplates.find(template => template.kind === kind)
         ?? starterTemplates[0];
-    const previewSubject = [
-      ...subjectsSelected.map(value => {
-        const option = availableSubjects.find(subject => subject.en === value);
-        if (!option) return value;
-        return englishSubjectName(option);
-      }).map(subject => student.stream ? `${student.stream} · ${subject}` : subject),
-      student.customSubject.trim()
-    ].filter(Boolean)[0] ?? "Subject";
-    const livePreview = createDesign(student.name.trim() || "Student Name", {
-      name: student.name.trim() || "Student Name",
-      grade: formatGradeForLanguage(student.grade || "5", language),
+    const selectedPreviewSubjects = selectedSubjectLabels;
+    const previewSubject = selectedPreviewSubjects.find(isEnglishCardSubject)
+      ?? selectedPreviewSubjects[0]
+      ?? "Subject";
+    const englishPreview = isEnglishCardSubject(previewSubject);
+    const hasSinhalaText = (value: string) => /[\u0D80-\u0DFF]/.test(value);
+    const previewName = englishPreview
+      ? student.englishName.trim() || (!hasSinhalaText(student.name) ? student.name.trim() : "Student Name")
+      : student.name.trim() || "Student Name";
+    const previewSchool = englishPreview
+      ? student.englishSchool.trim() || (!hasSinhalaText(student.school) ? student.school.trim() : "")
+      : student.school;
+    const gradeNumber = student.grade.match(/\d+/)?.[0];
+    const previewGrade = englishPreview
+      ? gradeNumber ? `Grade ${gradeNumber}` : hasSinhalaText(student.grade) ? "" : student.grade.trim()
+      : formatGradeForLanguage(student.grade || "5", language);
+    const livePreview = createDesign(previewName, {
+      name: previewName,
+      grade: previewGrade,
       subject: previewSubject,
-      school: student.school
+      school: previewSchool
     }, previewTemplate, language);
     const sortedQuickTemplates = templates
       .filter(template => template.kind === kind)
@@ -968,17 +1058,27 @@ export function StickerStudio() {
           {transliterationError && language === "Sinhala" && <p className="mt-2 text-xs text-rose-600" role="alert">{transliterationError} Direct Sinhala keyboard input is still available.</p>}
           <label className="field-label mt-4 block">School name <span className="font-normal text-slate-400">· optional</span><input ref={element => { studentInputRefs.current.school = element; }} onFocus={() => beginStudentInput("school")} onCompositionStart={() => composingStudentFields.current.add("school")} lang={typingMode === "Sinhala Keyboard" ? "si" : "en"} dir="auto" spellCheck={false} autoComplete="off" autoCapitalize="off" autoCorrect="off" className="text-input mt-2" placeholder="Sinhala, English, or mixed text" value={student.school} onChange={e => updateStudentInput("school", e.target.value, e.target.selectionStart ?? e.target.value.length, composingStudentFields.current.has("school"))} onCompositionEnd={e => finishStudentComposition("school", e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}/></label>
           {student.grade && <div className="subject-picker-panel mt-4 rounded-2xl border border-[#f0e9e2] bg-[#fffdfa] p-4">
-            <div className="mb-3 flex items-center justify-between"><div><b className="text-sm">Add subjects</b><p className="mt-1 text-[11px] text-slate-500">Subject names stay in English. Each selected subject gets its own sticker; the print sheet cycles through them.</p></div><span className="rounded-full bg-[#f5ecfa] px-2.5 py-1 text-[10px] font-semibold text-[#80609a]">{Number(student.grade.replace(/\D/g, "")) ? `Grade ${student.grade.replace(/\D/g, "")} ideas` : "Subject ideas"}</span></div>
+            <div className="mb-3 flex items-center justify-between"><div><b className="text-sm">Add subjects</b><p className="mt-1 text-[11px] text-slate-500">English subject labels stay in English; other subjects follow the selected display language. Each selected subject gets its own sticker on the A4 sheet.</p></div><span className="rounded-full bg-[#f5ecfa] px-2.5 py-1 text-[10px] font-semibold text-[#80609a]">{Number(student.grade.replace(/\D/g, "")) ? `Grade ${student.grade.replace(/\D/g, "")} ideas` : "Subject ideas"}</span></div>
             {unavailableSubjects.length > 0 && <p className="mb-3 rounded-lg bg-amber-50 p-2 text-[10px] text-amber-800">The selected subject(s) may not match this grade: {unavailableSubjects.join(", ")}. Review them before generating.</p>}
             {Number(student.grade.replace(/\D/g, "")) >= 12 && <label className="field-label mb-3 block">Stream or subject combination<select className="text-input mt-2" value={student.stream} onChange={e => setStudent({ ...student, stream: e.target.value })}><option value="">Optional — choose a stream</option>{["Biological Science", "Physical Science", "Commerce", "Arts", "Technology", "Custom combination"].map(option => <option key={option}>{option}</option>)}</select></label>}
             <label className="search-box mb-3 flex w-full"><Search size={15}/><input aria-label="Search subjects" lang="en" dir="auto" spellCheck={false} placeholder="Search subjects" value={subjectSearch} onChange={e => setSubjectSearch(e.target.value)}/></label>
-            <div className="flex flex-wrap gap-2">{filteredSubjects.map(subject => <button key={subject.en} onClick={() => setSubjectsSelected(prev => prev.includes(subject.en) ? prev.filter(value => value !== subject.en) : [...prev, subject.en])} className={`subject-pill ${subjectsSelected.includes(subject.en) ? "chosen" : ""}`}>{subjectsSelected.includes(subject.en) && <Check size={12}/>} {subjectLabel(subject)}</button>)}</div>
+            <div className="flex flex-wrap gap-2">{filteredSubjects.map(subject => <button key={subject.en} onClick={() => toggleSubjectSelection(subject.en)} className={`subject-pill ${subjectsSelected.includes(subject.en) ? "chosen" : ""}`}>{subjectsSelected.includes(subject.en) && <Check size={12}/>} {subjectLabel(subject)}</button>)}</div>
             {filteredSubjects.length === 0 && <p className="mt-2 text-xs text-slate-500">No subjects match that search.</p>}
-            {subjectsSelected.length > 0 && <p className="mt-3 text-[11px] font-medium text-[#397b68]">{subjectsSelected.length} subject{subjectsSelected.length === 1 ? "" : "s"} selected. Each will appear on a separate sticker, in this order: {subjectsSelected.map(value => {
-              const subject = availableSubjects.find(option => option.en === value);
-              return subject ? englishSubjectName(subject) : value;
-            }).join(" → ")}.</p>}
-            <div className="mt-3 flex gap-2"><input ref={element => { studentInputRefs.current.customSubject = element; }} onFocus={() => beginStudentInput("customSubject")} onCompositionStart={() => composingStudentFields.current.add("customSubject")} lang={typingMode === "Sinhala Keyboard" ? "si" : "en"} dir="auto" spellCheck={false} autoComplete="off" autoCapitalize="off" autoCorrect="off" className="text-input py-2 text-xs" placeholder="Add a custom subject or combination" value={student.customSubject} onChange={e => updateStudentInput("customSubject", e.target.value, e.target.selectionStart ?? e.target.value.length, composingStudentFields.current.has("customSubject"))} onCompositionEnd={e => finishStudentComposition("customSubject", e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}/></div>
+            {selectedSubjectLabels.some(isEnglishCardSubject) && <div className="mt-3 grid gap-3 rounded-xl border border-[#e7eee9] bg-[#fbfdfb] p-3 sm:grid-cols-2">
+              <label className="field-label">Name in English <span className="required">*</span>
+                <input ref={element => { studentInputRefs.current.englishName = element; }} onFocus={() => beginStudentInput("englishName")} lang="en" dir="auto" spellCheck={false} autoComplete="off" autoCapitalize="words" autoCorrect="off" className="text-input mt-2" placeholder="e.g. Kavindu Perera" value={student.englishName} onChange={event => updateStudentInput("englishName", event.target.value)}/>
+              </label>
+              <label className="field-label">School in English <span className="font-normal text-slate-400">· optional</span>
+                <input ref={element => { studentInputRefs.current.englishSchool = element; }} onFocus={() => beginStudentInput("englishSchool")} lang="en" dir="auto" spellCheck={false} autoComplete="off" autoCapitalize="words" autoCorrect="off" className="text-input mt-2" placeholder="e.g. ABC College" value={student.englishSchool} onChange={event => updateStudentInput("englishSchool", event.target.value)}/>
+              </label>
+              <p className="text-[10px] leading-5 text-slate-500 sm:col-span-2">These English details are used only on English subject and book cards. Other subject cards keep their original details and Sinhala grade.</p>
+            </div>}
+            {customSubjects.length > 0 && <div className="mt-3 flex flex-wrap gap-2" aria-label="Added custom subjects">{customSubjects.map(subject => <span key={subject} className="subject-pill chosen">{subject}<button type="button" className="ml-1 rounded-full p-0.5 hover:bg-white/70" aria-label={`Remove ${subject}`} onClick={() => setCustomSubjects(previous => previous.filter(item => item !== subject))}><X size={12}/></button></span>)}</div>}
+            {selectedSubjectLabels.length > 0 && <p className="mt-3 text-[11px] font-medium text-[#397b68]">{selectedSubjectLabels.length} subject{selectedSubjectLabels.length === 1 ? "" : "s"} selected. Each will appear on a separate sticker, in this order: {selectedSubjectLabels.join(" → ")}.</p>}
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <input ref={element => { studentInputRefs.current.customSubject = element; }} onFocus={() => beginStudentInput("customSubject")} onCompositionStart={() => composingStudentFields.current.add("customSubject")} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); addCustomSubject(); } }} lang={typingMode === "Sinhala Keyboard" ? "si" : "en"} dir="auto" spellCheck={false} autoComplete="off" autoCapitalize="off" autoCorrect="off" className="text-input min-w-0 flex-1 py-2 text-xs" placeholder="Add any subject you need" value={student.customSubject} onChange={e => updateStudentInput("customSubject", e.target.value, e.target.selectionStart ?? e.target.value.length, composingStudentFields.current.has("customSubject"))} onCompositionEnd={e => finishStudentComposition("customSubject", e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}/>
+              <button type="button" className="secondary-button w-full shrink-0 justify-center sm:w-auto" onClick={addCustomSubject}><Plus size={14}/> Add subject</button>
+            </div>
           </div>}
           <div className="mt-6 border-t border-[#f1ede8] pt-5"><div className="mb-3 flex items-center justify-between"><div><b className="text-sm">Pick a style</b><p className="mt-1 text-[11px] text-slate-500">You can change it later. Current selection is highlighted.</p></div><button className="text-xs font-semibold text-[#397b68]" onClick={() => changeSection("Templates")}>Browse all <ArrowRight size={13} className="ml-1 inline"/></button></div><div className="grid grid-cols-3 gap-2 sm:grid-cols-4">{quickTemplates.map(t => <TemplateCard key={t.id} template={t} assetUrls={assetUrls} compact selected={selectedTemplateId === t.id} onChoose={() => { setSelectedTemplateId(t.id); if (design) applyTemplate(t); }}/>)}</div></div>
           <button className="primary-button mt-5 w-full justify-center py-3.5" onClick={() => void generateDesign()}><WandSparkles size={16}/> Generate my sticker <ArrowRight size={15}/></button>

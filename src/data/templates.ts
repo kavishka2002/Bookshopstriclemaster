@@ -136,7 +136,12 @@ export const subjectPresets: Record<string, Array<{ en: string; si: string }>> =
   "1-5": [
     { en: "Mathematics", si: "ගණිතය" }, { en: "English", si: "ඉංග්‍රීසි" }, { en: "Sinhala", si: "සිංහල" },
     { en: "Tamil", si: "දෙමළ" }, { en: "Environmental Studies", si: "පරිසරය" }, { en: "Religion", si: "ආගම" },
-    { en: "Art", si: "චිත්‍ර" }, { en: "Health & Physical Education", si: "සෞඛ්‍ය හා ශාරීරික අධ්‍යාපනය" }
+    { en: "Art", si: "චිත්‍ර" }, { en: "Health & Physical Education", si: "සෞඛ්‍ය හා ශාරීරික අධ්‍යාපනය" },
+    { en: "Dictation", si: "අසා ලිවීම" }, { en: "Essay Writing", si: "රචනා" },
+    { en: "Creative Sentence Writing", si: "නිර්මාණාත්මක වැකි ලිවීම" },
+    { en: "Five-Ruled Book", si: "පස් රූල් පොත" },
+    { en: "English Workbook", si: "English Workbook" },
+    { en: "English Pupil Book 1-5", si: "English Pupil Book 1-5" }
   ],
   "6-11": [
     { en: "Mathematics", si: "ගණිතය" }, { en: "English", si: "ඉංග්‍රීසි" }, { en: "Sinhala", si: "සිංහල" },
@@ -152,3 +157,9 @@ export const subjectPresets: Record<string, Array<{ en: string; si: string }>> =
     { en: "Engineering Technology", si: "ඉංජිනේරු තාක්ෂණවේදය" }
   ]
 };
+
+export const englishBookSubjectOptions = [
+  { en: "English Workbook", si: "English Workbook" },
+  { en: "English Book", si: "English Book" },
+  { en: "English Textbook", si: "English Textbook" }
+];
