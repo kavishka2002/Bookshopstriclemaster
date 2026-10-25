@@ -10,6 +10,19 @@ describe("offline account input and password handling", () => {
     expect(provisionedAccountSeeds.filter(account => account.role === "admin")).toHaveLength(1);
   });
 
+  it("provisions Danu communication with a salted shop account", () => {
+    const account = provisionedAccountSeeds.find(seed => seed.username === "Danu");
+    expect(account).toMatchObject({
+      id: "shop-danu-communication",
+      shopName: "Danu communication",
+      role: "shop",
+      active: true,
+      mustChangePassword: false
+    });
+    expect(account?.salt).toHaveLength(24);
+    expect(account?.passwordHash).toHaveLength(44);
+  });
+
   it("validates usernames without accepting whitespace or unsafe characters", () => {
     expect(validateUsername("P321")).toBe("P321");
     expect(validateUsername("shop.owner_1")).toBe("shop.owner_1");

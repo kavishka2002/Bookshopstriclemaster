@@ -33,6 +33,8 @@ Customer accounts are provisioned **only in source code**; the application has n
 
 The source also provisions a free trial account `T123 / 1234`. Trial users can create and edit name stickers for preview, but cannot print or access the Past Paper Finder. Other paid actions remain restricted. The dashboard displays the Rs. 1,499 full-access price and WhatsApp contact `0767660922`. This account is added alongside existing accounts; it does not replace them. Since accounts and trial restrictions are enforced in the browser, they are not a server-side licensing boundary; the trial password is intentionally simple, so do not use the trial account for private data.
 
+The source also provisions the `Danu` shop account for `Danu communication`. It has the standard shop workspace access; account management remains administrator-only.
+
 The seed format is:
 
 ```ts

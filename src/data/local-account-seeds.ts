@@ -37,5 +37,17 @@ export const provisionedAccountSeeds: ProvisionedAccountSeed[] = [
     role: "shop",
     mustChangePassword: false,
     isTrial: true
+  },
+  {
+    id: "shop-danu-communication",
+    username: "Danu",
+    shopName: "Danu communication",
+    ownerContact: "",
+    passwordHash: "t2B74tcJcZwfcv4DyP0tQOstH29KBTM2M/SrsTmp6Tk=",
+    salt: "WnyoSNNBdisisQbe6HKaOg==",
+    active: true,
+    createdAt: 1792912853000,
+    role: "shop",
+    mustChangePassword: false
   }
 ];
