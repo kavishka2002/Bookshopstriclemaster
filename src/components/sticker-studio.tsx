@@ -20,7 +20,7 @@ import { createPrintSticker, getPrintStickerCount, getPrintSubjectIndex, getPrin
 import { englishFonts, fontPreviewText, fontCategories, normalizeFontSelection, resolvedFontWeight, sinhalaFonts, textFontStack } from "@/lib/font-catalog";
 import { initializeSinglish, transliterateSinglish, updateLiveTransliterationDraft } from "@/lib/sinhala";
 import { getDisplayText, getFittedFontSize } from "@/lib/text-layout";
-import { formatGradeForLanguage } from "@/lib/grade";
+import { formatGradeForCard } from "@/lib/grade";
 import { addMissingStarterSubjects } from "@/lib/subject-presets";
 import { englishSubjectName, isEnglishCardSubject, subjectNameForLanguage } from "@/lib/subject-labels";
 import { StickerDecoration } from "@/components/sticker-decoration";
@@ -171,6 +171,7 @@ export function StickerStudio() {
   const [assets, setAssets] = useState<ImageAsset[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [design, setDesign] = useState<StickerDesign | null>(null);
+  const [previewSubject, setPreviewSubject] = useState("");
   const [selectedText, setSelectedText] = useState<string>("name");
   const [language, setLanguage] = useState<LanguageMode>("English");
   const [typingMode, setTypingMode] = useState<TextInputMode>("English");
@@ -474,19 +475,28 @@ export function StickerStudio() {
     if (!design) return;
     const target = design.texts.find(text => text.id === textId || text.field === textId);
     if (!target) return;
-    const selectedSubjects = target.field === "subject" && patch.text !== undefined && design.printSubjects?.length
-      ? [patch.text.trim(), ...design.printSubjects.slice(1)]
+    const activeSubject = design.printSubjects?.includes(previewSubject)
+      ? previewSubject
+      : design.texts.find(text => text.field === "subject")?.text ?? "";
+    const selectedSubjectIndex = target.field === "subject" && patch.text !== undefined
+      ? design.printSubjects?.indexOf(activeSubject) ?? -1
+      : -1;
+    const selectedSubjects = selectedSubjectIndex >= 0 && design.printSubjects
+      ? design.printSubjects.map((subject, index) => index === selectedSubjectIndex ? patch.text!.trim() : subject)
       : undefined;
     const updatedTexts = design.texts.map(text => text.id === target.id ? { ...text, ...patch } : text);
     const previousCustomCount = design.texts.filter(text => text.field === "custom" && text.visible && text.text.trim()).length;
     const nextCustomCount = updatedTexts.filter(text => text.field === "custom" && text.visible && text.text.trim()).length;
-    const englishPreview = design.printSubjects?.some(isEnglishCardSubject)
-      && isEnglishCardSubject(design.texts.find(text => text.field === "subject")?.text ?? "");
+    const englishPreview = isEnglishCardSubject(activeSubject);
     patchDesign({
       texts: previousCustomCount === nextCustomCount ? updatedTexts : reflowForCustomFields(updatedTexts),
       ...(selectedSubjects ? { printSubjects: selectedSubjects } : {}),
       ...(englishPreview && target.field === "name" && patch.text !== undefined ? { englishCardName: patch.text } : {}),
-      ...(englishPreview && target.field === "school" && patch.text !== undefined ? { englishCardSchool: patch.text } : {})
+      ...(englishPreview && target.field === "grade" && patch.text !== undefined ? { englishCardGrade: patch.text } : {}),
+      ...(englishPreview && target.field === "school" && patch.text !== undefined ? { englishCardSchool: patch.text } : {}),
+      ...(!englishPreview && target.field === "name" && patch.text !== undefined ? { defaultCardName: patch.text } : {}),
+      ...(!englishPreview && target.field === "grade" && patch.text !== undefined ? { defaultCardGrade: patch.text } : {}),
+      ...(!englishPreview && target.field === "school" && patch.text !== undefined ? { defaultCardSchool: patch.text } : {})
     });
   };
   const updateStickerTextInput = (text: TextElement, nextValue: string, selectionStart: number, isComposing = false) => {
@@ -606,9 +616,64 @@ export function StickerStudio() {
     }
     if (!generatedBatch.some(batchItem => batchItem.id === normalized.id)) setGeneratedBatch([]);
     setDesign(normalized);
+    setPreviewSubject("");
     setSelectedText("name");
     setSection("Create sticker");
     await persistDesign(normalized);
+  };
+  const backToSubjectSelection = async () => {
+    if (!design) return;
+    const savedSubjects = getPrintSubjects(design);
+    const availableOptions = [...new Map(
+      [...Object.values(subjectOptions).flat(), ...englishBookSubjectOptions]
+        .map(subject => [subject.en, subject])
+    ).values()];
+    const selectedOptions: string[] = [];
+    const restoredCustomSubjects: string[] = [];
+    let restoredStream = "";
+    for (const label of savedSubjects) {
+      const matchingOption = availableOptions.find(option => {
+        const localizedName = subjectNameForLanguage(option, design.language);
+        if (label === option.en || label === option.si || label === localizedName) return true;
+        const streamLabel = ` · ${localizedName}`;
+        if (label.endsWith(streamLabel)) {
+          restoredStream = label.slice(0, -streamLabel.length);
+          return true;
+        }
+        return false;
+      });
+      if (matchingOption) selectedOptions.push(matchingOption.en);
+      else restoredCustomSubjects.push(label);
+    }
+    const textFor = (field: TextElement["field"]) => design.texts.find(text => text.field === field)?.text ?? "";
+    setStudent(previous => ({
+      ...previous,
+      name: design.defaultCardName ?? textFor("name"),
+      grade: design.defaultCardGrade ?? textFor("grade"),
+      school: design.defaultCardSchool ?? textFor("school"),
+      englishName: design.englishCardName ?? previous.englishName,
+      englishSchool: design.englishCardSchool ?? previous.englishSchool,
+      stream: restoredStream,
+      customSubject: ""
+    }));
+    setSubjectsSelected(selectedOptions);
+    setCustomSubjects(restoredCustomSubjects);
+    setKind(design.kind);
+    setSelectedTemplateId(design.templateId);
+    setPreviewSubject("");
+    try {
+      const saved = { ...design, updatedAt: Date.now(), lastUsedAt: Date.now() };
+      await db.putDesign(saved);
+      writeRecentIds(saved.id);
+      setDesigns(previous => [saved, ...previous.filter(item => item.id !== saved.id)]);
+      setRecentIds(readRecentIds());
+      setDesign(null);
+      setSelectedText("name");
+      setError("");
+      setSection("Create sticker");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save the current card before returning to subject selection.");
+    }
   };
   const generateDesign = async (template?: StickerTemplate) => {
     if (!student.name.trim()) { setError("Add the student name to create a sticker."); return; }
@@ -616,10 +681,7 @@ export function StickerStudio() {
     const hasSinhalaText = (value: string) => /[\u0D80-\u0DFF]/.test(value);
     const englishCardName = student.englishName.trim() || (!hasSinhalaText(student.name) ? student.name.trim() : "");
     const englishCardSchool = student.englishSchool.trim() || (!hasSinhalaText(student.school) ? student.school.trim() : "");
-    const gradeNumber = student.grade.match(/\d+/)?.[0];
-    const englishCardGrade = gradeNumber
-      ? `Grade ${gradeNumber}`
-      : hasSinhalaText(student.grade) ? "" : student.grade.trim();
+    const englishCardGrade = formatGradeForCard(student.grade, language, true);
     if (englishSelected && (!englishCardName || hasSinhalaText(englishCardName))) {
       setError("Enter the student name in English for the English subject card.");
       return;
@@ -655,7 +717,7 @@ export function StickerStudio() {
       : templates.find(t => t.id === selectedTemplateId && t.kind === kind) ?? templates.find(t => t.kind === kind && t.favourite) ?? templates.find(t => t.kind === kind) ?? starterTemplates[0]);
     const subjectLabels = selectedSubjectLabels;
     const nextDesign = createSubjectDesign(student.name.trim(), {
-      name: student.name.trim(), grade: formatGradeForLanguage(student.grade, language), school: student.school
+      name: student.name.trim(), grade: formatGradeForCard(student.grade, language, false), school: student.school
     }, subjectLabels, selectedTemplate, language, englishSelected
       ? { name: englishCardName, grade: englishCardGrade, school: englishCardSchool }
       : undefined);
@@ -672,6 +734,7 @@ export function StickerStudio() {
       setRecentIds(readRecentIds());
       setGeneratedBatch([saved]);
       setDesign(saved);
+      setPreviewSubject("");
       setSelectedText("name");
       setError("");
       setMessage(subjectLabels.length > 1
@@ -994,10 +1057,7 @@ export function StickerStudio() {
     const previewSchool = englishPreview
       ? student.englishSchool.trim() || (!hasSinhalaText(student.school) ? student.school.trim() : "")
       : student.school;
-    const gradeNumber = student.grade.match(/\d+/)?.[0];
-    const previewGrade = englishPreview
-      ? gradeNumber ? `Grade ${gradeNumber}` : hasSinhalaText(student.grade) ? "" : student.grade.trim()
-      : formatGradeForLanguage(student.grade || "5", language);
+    const previewGrade = formatGradeForCard(student.grade || "5", language, englishPreview);
     const livePreview = createDesign(previewName, {
       name: previewName,
       grade: previewGrade,
@@ -1094,19 +1154,23 @@ export function StickerStudio() {
     if (!design) return null;
     const customDimensionUnit = design.customDimensionUnit;
     const editorSubjects = getPrintSubjects(design);
+    const defaultPreviewSubject = design.texts.find(item => item.field === "subject")?.text ?? editorSubjects[0] ?? "";
+    const activePreviewSubject = editorSubjects.includes(previewSubject) ? previewSubject : defaultPreviewSubject;
+    const editorPreviewDesign = activePreviewSubject ? createPrintSticker(design, activePreviewSubject) : design;
     return <div className="space-y-5">
       {generatedBatch.length > 1 && <section className="soft-card p-4"><div className="flex flex-wrap items-end justify-between gap-2"><div><b className="text-sm">All generated subject cards</b><p className="mt-1 text-xs text-slate-500">Preview every card here. Edit or print cards individually.</p></div><span className="text-xs text-slate-500">{generatedBatch.length} cards</span></div><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">{generatedBatch.map(item => <article className="rounded-xl border border-[#eee9e2] bg-white p-3" key={item.id}><button className="block w-full text-left" onClick={() => void openDesign(item)}><div className="design-card-preview min-h-24"><StickerPreview design={item} assetUrls={assetUrls}/></div><b className="mt-2 block truncate text-xs">{item.texts.find(text => text.field === "subject")?.text || item.name}</b></button><div className="mt-2 flex gap-2"><button className="small-action flex-1" onClick={() => void openDesign(item)}>Edit card</button><button className="small-action flex-1" data-paid-feature onClick={() => { setDesign(item); setCopies(1); setPrintPage(0); changeSection("A4 print studio"); }}>Print this card</button></div></article>)}</div></section>}
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><button className="back-link" onClick={() => changeSection("Home")}><ArrowLeft size={14}/> Back to studio</button><h1 className="page-title mt-2">Make it yours <span className="text-base font-medium text-slate-400">· {design.name}</span></h1><p className="mt-1 text-xs text-slate-500">Tap a line to edit it. Drag text and decorations right on the sticker.</p>{editorSubjects.filter(Boolean).length > 1 && <p className="mt-2 rounded-lg bg-[#eff7f2] px-3 py-2 text-xs text-[#397b68]">This editor preview shows “{design.texts.find(item => item.field === "subject")?.text}”. The A4 print sheet includes all {editorSubjects.length} selected subjects, each on its own sticker.</p>}</div><div className="flex flex-wrap gap-2"><button className="secondary-button !px-3" onClick={() => void saveTemplate()}><LayoutGrid size={15}/> Save as template</button><button className="primary-button !px-4" onClick={() => void persistDesign(design, true)}><Save size={15}/> Save design</button></div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex flex-wrap gap-2"><button className="back-link" onClick={() => changeSection("Home")}><ArrowLeft size={14}/> Back to studio</button><button className="secondary-button !px-3 !py-2" onClick={() => void backToSubjectSelection()}><ArrowLeft size={14}/> Back to details / add subjects</button></div><h1 className="page-title mt-2">Make it yours <span className="text-base font-medium text-slate-400">· {design.name}</span></h1><p className="mt-1 text-xs text-slate-500">Tap a line to edit it. Drag text and decorations right on the sticker.</p>{editorSubjects.filter(Boolean).length > 1 && <p className="mt-2 rounded-lg bg-[#eff7f2] px-3 py-2 text-xs text-[#397b68]">This editor preview shows “{design.texts.find(item => item.field === "subject")?.text}”. The A4 print sheet includes all {editorSubjects.length} selected subjects, each on its own sticker.</p>}</div><div className="flex flex-wrap gap-2"><button className="secondary-button !px-3" onClick={() => void saveTemplate()}><LayoutGrid size={15}/> Save as template</button><button className="primary-button !px-4" onClick={() => void persistDesign(design, true)}><Save size={15}/> Save design</button></div></div>
       <div className="sticker-editor-layout grid gap-5">
         <div className="soft-card sticker-preview-column p-4 md:p-7">
           <div className="mb-4 flex items-center justify-between"><span className="eyebrow">LIVE PREVIEW · {design.widthMm} × {design.heightMm} MM</span><span className="text-[11px] text-slate-400">Click text to select · drag to move</span></div>
+          {editorSubjects.length > 1 && <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Choose subject card preview"><span className="mr-1 text-xs font-semibold text-slate-500">Preview card</span>{editorSubjects.map(subject => <button type="button" key={subject} aria-pressed={activePreviewSubject === subject} className={`subject-pill ${activePreviewSubject === subject ? "chosen" : ""}`} onClick={() => setPreviewSubject(subject)}>{subject}</button>)}</div>}
           <div className="editor-stage"><div className="sticker-canvas relative overflow-hidden" ref={canvasRef} onPointerMove={moveDrag} onPointerUp={() => { dragRef.current = null; }} onPointerCancel={() => { dragRef.current = null; }} style={{ width: "min(100%, 620px)", aspectRatio: `${design.widthMm}/${design.heightMm}`, background: design.background, border: `${design.borderWidth}px ${design.borderStyle} ${design.borderColor}`, borderRadius: stickerCornerRadius(design), boxShadow: "0 8px 25px #29344a1a", touchAction: "none", containerType: "inline-size" }}>
             {design.backgroundAssetId && assetUrls[design.backgroundAssetId] && <img src={assetUrls[design.backgroundAssetId]} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full object-cover"/>}
             {design.innerBorder && <div className="pointer-events-none absolute inset-[5px] rounded-[inherit]" style={{ border: `1px solid ${design.borderColor}88` }}/>}
             {design.showCutline && <div className="pointer-events-none absolute -inset-1 rounded-[inherit]" style={{ border: "1px dashed #888"}}/>}
-            <StickerDecoration variant={design.decoration} accent={design.texts.find(text => text.field === "name")?.color ?? design.borderColor} secondary={design.texts.find(text => text.field === "grade")?.color ?? design.borderColor}/>
+            <StickerDecoration variant={design.decoration} accent={editorPreviewDesign.texts.find(text => text.field === "name")?.color ?? design.borderColor} secondary={editorPreviewDesign.texts.find(text => text.field === "grade")?.color ?? design.borderColor}/>
             {design.images.map(image => { const asset = assets.find(a => a.id === image.assetId); return asset && assetUrls[asset.id] ? <img key={image.id} src={assetUrls[asset.id]} alt={asset.name} draggable={false} onPointerDown={e => startDrag(e, image.id, "image", image.x, image.y)} className="absolute z-10 cursor-move object-contain" style={{ left: `${image.x}%`, top: `${image.y}%`, width: `${image.width}%`, transform: `translate(-50%,-50%) rotate(${image.rotation}deg)` }}/> : null; })}
-            {design.texts.filter(t => t.visible && t.text).map(t => {
+            {editorPreviewDesign.texts.filter(t => t.visible && t.text).map(t => {
               const fit = getFittedFontSize(t, design.widthMm, design.heightMm);
               return <div key={t.id} lang="auto" onClick={() => setSelectedText(t.id)} onPointerDown={e => startDrag(e, t.id, "text", t.x, t.y)} className={`absolute z-20 flex cursor-move select-none break-words px-1 ${selectedText === t.id || selectedText === t.field ? "outline outline-1 outline-dashed outline-[#397b68]/70" : ""}`} style={{ left: `${t.x}%`, top: `${t.y}%`, width: `${t.width}%`, height: `${t.height ?? 20}%`, transform: `translate(-50%,-50%) rotate(${t.rotation}deg)`, color: t.color, fontFamily: textFontStack(t.fontFamily, t.sinhalaFontFamily), fontSize: `${fit.fontSize * 0.2646 / design.widthMm * 100}cqw`, fontWeight: resolvedFontWeight(t), textAlign: t.align, justifyContent: t.align === "left" ? "flex-start" : t.align === "right" ? "flex-end" : "center", alignItems: "center", whiteSpace: t.wrap === false ? "nowrap" : "normal", overflow: "hidden", overflowWrap: "anywhere", lineHeight: t.lineHeight, letterSpacing: `${t.letterSpacing * 0.2646 / design.widthMm * 100}cqw` }}>{getDisplayText(t)}</div>;
             })}
