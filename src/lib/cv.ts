@@ -64,6 +64,12 @@ export interface CvEducation {
   description: string;
 }
 
+export interface CvExamResult {
+  id: string;
+  subject: string;
+  result: string;
+}
+
 export interface CvExperience {
   id: string;
   title: string;
@@ -95,6 +101,12 @@ export interface CvDraft {
   id: "current";
   personal: CvPersonalDetails;
   education: CvEducation[];
+  olResults: CvExamResult[];
+  alResults: CvExamResult[];
+  olExamYear: string;
+  olIndexNumber: string;
+  alExamYear: string;
+  alIndexNumber: string;
   experience: CvExperience[];
   projects: CvProject[];
   technicalSkills: string[];
@@ -139,6 +151,12 @@ export const emptyCvDraft = (): CvDraft => ({
   id: "current",
   personal: { fullName: "", title: "", email: "", phone: "", address: "", cityCountry: "", summary: "", linkedIn: "", github: "", portfolio: "" },
   education: [],
+  olResults: [],
+  alResults: [],
+  olExamYear: "",
+  olIndexNumber: "",
+  alExamYear: "",
+  alIndexNumber: "",
   experience: [],
   projects: [],
   technicalSkills: [],

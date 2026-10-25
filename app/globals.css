@@ -197,6 +197,16 @@ textarea.cv-input { min-height: 78px; resize: vertical; line-height: 1.55; }
 .cv-document-paragraph { white-space: pre-wrap; color: #465264; font-size: var(--cv-font-size); line-height: 1.55; overflow-wrap: anywhere; }
 .cv-item-list { display: grid; gap: 8px; }
 .cv-document-item { break-inside: avoid; page-break-inside: avoid; }
+.cv-exam-results { break-inside: avoid; page-break-inside: avoid; }
+.cv-exam-results h3 { margin: 5px 0 3px; color: #526072; font-size: 8.5pt; }
+.cv-exam-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 3px; color: #697687; font-size: 8pt; }
+.cv-exam-result-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 3px 12px; }
+.cv-exam-result { display: flex; min-width: 0; justify-content: space-between; gap: 8px; color: #526072; font-size: 8.5pt; }
+.cv-exam-result span { min-width: 0; overflow-wrap: anywhere; }
+.cv-exam-result b { flex: 0 0 auto; color: #354256; }
+.cv-exam-editor { margin-top: 14px; border-top: 1px solid #f0ede8; padding-top: 10px; }
+.cv-exam-details { margin-top: 8px; }
+.cv-exam-record { margin-top: 8px; border: 1px solid #f0ede8; border-radius: 9px; padding: 9px; }
 .cv-item-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 10px; color: #354256; font-size: 9.5pt; }
 .cv-item-heading span { color: #738091; font-size: 8.2pt; }
 .cv-item-subtitle { margin-top: 2px; color: #596779; font-size: 9pt; font-weight: 600; }
@@ -433,8 +443,22 @@ textarea.cv-input { min-height: 78px; resize: vertical; line-height: 1.55; }
   html.cv-print-mode,html.cv-print-mode body { width: auto !important; min-height: 0 !important; margin: 0 !important; background: white !important; }
   html.cv-print-mode body * { visibility: hidden !important; }
   html.cv-print-mode .cv-print-root,html.cv-print-mode .cv-print-root * { visibility: visible !important; }
-  html.cv-print-mode .cv-print-root { position: absolute !important; inset: 0 auto auto 0 !important; display: block !important; width: 210mm !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
-  html.cv-print-mode .cv-paper-stage { display: block !important; max-height: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; background: white !important; padding: 0 !important; box-shadow: none !important; }
+  html.cv-print-mode .studio-shell,
+  html.cv-print-mode .studio-shell > .main-column,
+  html.cv-print-mode .main-column > .main-content,
+  html.cv-print-mode .main-content > .cv-builder,
+  html.cv-print-mode .cv-builder > .cv-workspace,
+  html.cv-print-mode .cv-workspace > .cv-preview-column,
+  html.cv-print-mode .cv-preview-column > .cv-paper-stage { display: contents !important; }
+  html.cv-print-mode .studio-shell > :not(.main-column),
+  html.cv-print-mode .main-column > :not(.main-content),
+  html.cv-print-mode .main-content > :not(.cv-builder),
+  html.cv-print-mode .cv-builder > :not(.cv-workspace),
+  html.cv-print-mode .cv-workspace > :not(.cv-preview-column),
+  html.cv-print-mode .cv-preview-column > :not(.cv-paper-stage),
+  html.cv-print-mode .cv-paper-stage > :not(.cv-print-root) { display: none !important; }
+  html.cv-print-mode .cv-print-root { position: static !important; display: block !important; width: 210mm !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  html.cv-print-mode .cv-paper-stage { max-height: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; background: white !important; padding: 0 !important; box-shadow: none !important; }
   html.cv-print-mode .cv-page { width: 210mm !important; min-height: 297mm !important; margin: 0 !important; overflow: visible !important; box-shadow: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
   html.cv-print-mode .cv-page:is(.cv-template-developer,.cv-template-creative,.cv-template-two-column,.cv-template-executive,.cv-template-healthcare,.cv-template-data-analyst,.cv-template-elegant-sidebar,.cv-template-portfolio,.cv-template-modern-navy,.cv-template-modern-developer,.cv-template-modern-sidebar) { padding: 0 !important; }
   html.cv-print-mode .cv-document-grid { min-height: 297mm !important; }

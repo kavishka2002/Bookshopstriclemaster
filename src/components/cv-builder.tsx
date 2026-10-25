@@ -13,7 +13,7 @@ import { LocalizedUi } from "@/components/app-language";
 import { db } from "@/lib/database";
 import {
   cvSectionLabels, emptyCvDraft,
-  type CvDraft, type CvEducation, type CvEntry, type CvExperience, type CvPersonalDetails, type CvProject, type CvSectionId, type CvTextStyle
+  type CvDraft, type CvEducation, type CvEntry, type CvExamResult, type CvExperience, type CvPersonalDetails, type CvProject, type CvSectionId, type CvTextStyle
 } from "@/lib/cv";
 
 const templateCategories = ["All Templates", "Students & Graduates", "IT & Technology", "Healthcare", "Corporate", "Academic & Research", "Creative", "ATS-Friendly"] as const;
@@ -86,6 +86,64 @@ const palettes = ["#397b68", "#24466e", "#6b5b95", "#bb6a54", "#326f8e", "#242b3
 const uid = () => crypto.randomUUID();
 const clean = (value: string) => value.trim();
 const cvFontFamilies = ["Inter", "Poppins", "Lato", "Nunito", "Roboto", "Noto Sans Sinhala", "Noto Serif Sinhala"];
+const examSubjectGroups: Record<"olResults" | "alResults", Array<{ label: string; subjects: string[] }>> = {
+  olResults: [
+    { label: "Religion", subjects: ["Buddhism", "Catholicism", "Christianity", "Hinduism", "Islam"] },
+    { label: "Languages", subjects: ["Sinhala Language", "Tamil Language", "English", "Sinhala Literature", "Tamil Literature", "English Literature"] },
+    { label: "Core subjects", subjects: ["Mathematics", "Science", "History"] },
+    { label: "Other subjects", subjects: ["Geography", "Civic Education", "Business & Accounting Studies", "Entrepreneurship Studies", "Information & Communication Technology (ICT)", "Agriculture & Food Technology", "Health & Physical Education", "Art", "Dancing", "Music", "Drama & Theatre", "Home Economics", "Design & Technology"] }
+  ],
+  alResults: [
+    { label: "Biological Science", subjects: ["Biology", "Chemistry", "Physics", "Agricultural Science"] },
+    { label: "Physical Science / Mathematics", subjects: ["Combined Mathematics", "Physics", "Chemistry", "Information & Communication Technology (ICT)"] },
+    { label: "Commerce", subjects: ["Accounting", "Business Studies", "Economics", "Business Statistics"] },
+    { label: "Arts", subjects: ["Sinhala", "Tamil", "English", "Buddhist Civilization", "Hindu Civilization", "Islamic Civilization", "Christian Civilization", "Geography", "Political Science", "Logic & Scientific Method", "History", "Communication & Media Studies", "Home Economics", "Art", "Dancing", "Music", "Drama & Theatre"] },
+    { label: "Technology", subjects: ["Science for Technology", "Engineering Technology", "Bio Systems Technology", "Information & Communication Technology (ICT)", "Agricultural Science"] },
+    { label: "Other", subjects: ["General English", "Common General Test"] }
+  ]
+};
+const customExamSubject = "__other__";
+
+function ExamSubjectField({ collection, id, subject, onChange }: {
+  collection: "olResults" | "alResults";
+  id: string;
+  subject: string;
+  onChange: (value: string) => void;
+}) {
+  const subjects = examSubjectGroups[collection].flatMap(group => group.subjects);
+  const [custom, setCustom] = useState(() => Boolean(subject) && !subjects.includes(subject));
+  const value = custom ? customExamSubject : subject;
+  return <div className="cv-field">
+    <label htmlFor={`${collection}-${id}-subject`}>Subject</label>
+    <select
+      id={`${collection}-${id}-subject`}
+      className="cv-input"
+      value={value}
+      onChange={event => {
+        if (event.target.value === customExamSubject) {
+          setCustom(true);
+          if (!custom) onChange("");
+          return;
+        }
+        setCustom(false);
+        onChange(event.target.value);
+      }}
+    >
+      <option value="">Select a subject</option>
+      {examSubjectGroups[collection].map(group => <optgroup label={group.label} key={group.label}>
+        {group.subjects.map(option => <option value={option} key={option}>{option}</option>)}
+      </optgroup>)}
+      <option value={customExamSubject}>Other (enter a subject)</option>
+    </select>
+    {custom && <input
+      className="cv-input"
+      aria-label="Enter a custom subject"
+      value={subject}
+      onChange={event => onChange(event.target.value)}
+      placeholder="Type the subject name"
+    />}
+  </div>;
+}
 
 function textCss(style?: CvTextStyle): React.CSSProperties {
   return {
@@ -153,7 +211,7 @@ function Field({ label, value, onChange, placeholder, type = "text", required = 
 }) {
   const common = {
     className: "cv-input",
-    value,
+    value: value ?? "",
     placeholder,
     "aria-invalid": Boolean(error),
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(event.target.value)
@@ -219,7 +277,21 @@ function CvDocument({ draft, photoUrl, selectedTextId, onSelectText }: {
         {item.institution && <div className="cv-item-subtitle">{text(`education:${item.id}:institution`, "Institution", item.institution, "span", true)}</div>}
         {item.grade && <div className="cv-item-meta">{text(`education:${item.id}:grade`, "Grade or GPA", item.grade)}</div>}
         {item.description && <p className="cv-document-paragraph">{text(`education:${item.id}:description`, "Education description", item.description, "span", true)}</p>}
-      </article>)}</div>}
+      </article>)}
+      {(["olResults", "alResults"] as const).map((collection, index) => {
+        const results = draft[collection].filter(item => item.subject.trim() || item.result.trim());
+        if (!results.length) return null;
+        const year = index === 0 ? draft.olExamYear : draft.alExamYear;
+        const indexNumber = index === 0 ? draft.olIndexNumber : draft.alIndexNumber;
+        return <div className="cv-exam-results" key={collection}>
+          <h3>{index === 0 ? "G.C.E. O/L Results" : "G.C.E. A/L Results"}</h3>
+          {(year || indexNumber) && <p className="cv-exam-meta">{year && <span>{year}</span>}{indexNumber && <span>Index No. {indexNumber}</span>}</p>}
+          <div className="cv-exam-result-list">{results.map(item => <div className="cv-exam-result" key={item.id}>
+            <span>{text(`exam:${collection}:${item.id}:subject`, "Exam subject", item.subject, "span", true)}</span>
+            <b>{text(`exam:${collection}:${item.id}:result`, "Exam result", item.result, "span", true)}</b>
+          </div>)}</div>
+        </div>;
+      })}</div>}
       {id === "experience" && <div className="cv-item-list">{draft.experience.filter(hasExperience).map(item => <article className="cv-document-item" key={item.id}>
         <div className="cv-item-heading">{text(`experience:${item.id}:title`, "Job title", item.title, "b")}<span>{text(`experience:${item.id}:startDate`, "Experience start date", item.startDate)}{(item.startDate && (item.current || item.endDate)) ? " – " : ""}{text(`experience:${item.id}:endDate`, "Experience end date", item.current ? "Present" : item.endDate)}</span></div>
         {item.company && <div className="cv-item-subtitle">{text(`experience:${item.id}:company`, "Company", item.company, "span", true)}</div>}
@@ -450,6 +522,12 @@ export function CvBuilder() {
           ...baseline,
           ...saved,
           personal: { ...baseline.personal, ...saved.personal },
+          olResults: saved.olResults ?? baseline.olResults,
+          alResults: saved.alResults ?? baseline.alResults,
+          olExamYear: saved.olExamYear ?? baseline.olExamYear,
+          olIndexNumber: saved.olIndexNumber ?? baseline.olIndexNumber,
+          alExamYear: saved.alExamYear ?? baseline.alExamYear,
+          alIndexNumber: saved.alIndexNumber ?? baseline.alIndexNumber,
           customBlocks: saved.customBlocks ?? baseline.customBlocks,
           skillIds: {
             technicalSkills: saved.skillIds?.technicalSkills?.length === saved.technicalSkills?.length ? saved.skillIds.technicalSkills : (saved.technicalSkills ?? []).map(() => uid()),
@@ -500,7 +578,7 @@ export function CvBuilder() {
   }, [fontKey]);
 
   const updatePersonal = (key: keyof CvDraft["personal"], value: string) => setDraft(previous => ({ ...previous, personal: { ...previous.personal, [key]: value } }));
-  const updateRecord = <T extends { id: string }, K extends keyof T>(collection: keyof Pick<CvDraft, "education" | "experience" | "projects" | "certifications" | "training" | "publications" | "volunteer" | "awards" | "references">, id: string, key: K, value: T[K]) => {
+  const updateRecord = <T extends { id: string }, K extends keyof T>(collection: keyof Pick<CvDraft, "education" | "olResults" | "alResults" | "experience" | "projects" | "certifications" | "training" | "publications" | "volunteer" | "awards" | "references">, id: string, key: K, value: T[K]) => {
     setDraft(previous => ({
       ...previous,
       [collection]: previous[collection].map(item => item.id === id ? { ...item, [key]: value } : item)
@@ -517,6 +595,10 @@ export function CvBuilder() {
       const fields: readonly (keyof CvEducation)[] = ["qualification", "institution", "startYear", "endYear", "grade", "description"];
       const key = parts[2] as keyof CvEducation;
       if (fields.includes(key)) updateRecord<CvEducation, keyof CvEducation>("education", parts[1], key, value);
+    } else if (parts[0] === "exam" && (parts[1] === "olResults" || parts[1] === "alResults")) {
+      const fields: readonly (keyof CvExamResult)[] = ["subject", "result"];
+      const key = parts[3] as keyof CvExamResult;
+      if (fields.includes(key)) updateRecord<CvExamResult, keyof CvExamResult>(parts[1], parts[2], key, value);
     } else if (parts[0] === "experience") {
       const fields: readonly (keyof CvExperience)[] = ["title", "company", "startDate", "endDate", "details"];
       const key = parts[2] as keyof CvExperience;
@@ -547,9 +629,9 @@ export function CvBuilder() {
     if (!selectedTextId) return;
     setDraft(previous => ({ ...previous, textStyles: { ...previous.textStyles, [selectedTextId]: { ...previous.textStyles[selectedTextId], [key]: value } } }));
   };
-  const removeRecord = (collection: "education" | "experience" | "projects" | "certifications" | "training" | "publications" | "volunteer" | "awards" | "references", id: string) => {
+  const removeRecord = (collection: "education" | "olResults" | "alResults" | "experience" | "projects" | "certifications" | "training" | "publications" | "volunteer" | "awards" | "references", id: string) => {
     setDraft(previous => ({ ...previous, [collection]: previous[collection].filter(item => item.id !== id) }));
-    if (selectedTextId?.startsWith(`${collection === "projects" ? "project" : collection === "education" || collection === "experience" ? collection : `entry:${collection}`}:${id}:`)) setSelectedTextId(null);
+    if (selectedTextId?.startsWith(`${collection === "projects" ? "project" : collection === "education" || collection === "experience" ? collection : collection === "olResults" || collection === "alResults" ? `exam:${collection}` : `entry:${collection}`}:${id}:`)) setSelectedTextId(null);
   };
   const addSkill = (collection: "technicalSkills" | "softSkills" | "languages", event?: FormEvent) => {
     event?.preventDefault();
@@ -747,6 +829,24 @@ export function CvBuilder() {
             <div className="cv-form-grid"><Field label="Qualification or degree" value={item.qualification} onChange={value => updateRecord<CvEducation, "qualification">("education", item.id, "qualification", value)} placeholder="Bachelor of Science"/><Field label="Institution" value={item.institution} onChange={value => updateRecord<CvEducation, "institution">("education", item.id, "institution", value)} placeholder="University or school"/><Field label="Start year" value={item.startYear} onChange={value => updateRecord<CvEducation, "startYear">("education", item.id, "startYear", value)} placeholder="2022"/><Field label="End year / expected" value={item.endYear} onChange={value => updateRecord<CvEducation, "endYear">("education", item.id, "endYear", value)} placeholder="2026 or Present"/><Field label="Grade / GPA (optional)" value={item.grade} onChange={value => updateRecord<CvEducation, "grade">("education", item.id, "grade", value)} placeholder="3.8 GPA"/><Field label="Description (optional)" value={item.description} onChange={value => updateRecord<CvEducation, "description">("education", item.id, "description", value)} multiline placeholder="Relevant coursework or achievements"/></div>
           </div>)}
           <button className="cv-add-button" type="button" onClick={() => setDraft(previous => ({ ...previous, education: [...previous.education, { id: uid(), qualification: "", institution: "", startYear: "", endYear: "", grade: "", description: "" }] }))}><Plus size={15}/> Add Education</button>
+          {([
+            { collection: "olResults", title: "G.C.E. O/L results" },
+            { collection: "alResults", title: "G.C.E. A/L results" }
+          ] as const).map(({ collection, title }) => <div className="cv-exam-editor" key={collection}>
+            <div className="cv-record-head"><b>{title}</b></div>
+            <div className="cv-form-grid cv-exam-details">
+              <Field label="Exam year" value={collection === "olResults" ? draft.olExamYear : draft.alExamYear} onChange={value => setDraft(previous => ({ ...previous, [collection === "olResults" ? "olExamYear" : "alExamYear"]: value }))} placeholder="e.g. 2021"/>
+              <Field label="Index number" value={collection === "olResults" ? draft.olIndexNumber : draft.alIndexNumber} onChange={value => setDraft(previous => ({ ...previous, [collection === "olResults" ? "olIndexNumber" : "alIndexNumber"]: value }))} placeholder="Enter your exam index number"/>
+            </div>
+            {draft[collection].map((item, index) => <div className="cv-exam-record" key={item.id}>
+              <div className="cv-record-head"><small>{title} subject {index + 1}</small><button type="button" className="cv-icon-button" aria-label={`Remove ${title} subject ${index + 1}`} onClick={() => removeRecord(collection, item.id)}><Trash2 size={15}/></button></div>
+              <div className="cv-form-grid">
+                <ExamSubjectField collection={collection} id={item.id} subject={item.subject} onChange={value => updateRecord<CvExamResult, "subject">(collection, item.id, "subject", value)}/>
+                <Field label="Result / grade" value={item.result} onChange={value => updateRecord<CvExamResult, "result">(collection, item.id, "result", value)} placeholder="e.g. A"/>
+              </div>
+            </div>)}
+            <button className="cv-add-button" type="button" onClick={() => setDraft(previous => ({ ...previous, [collection]: [...previous[collection], { id: uid(), subject: "", result: "" }] }))}><Plus size={15}/> Add {title} subject</button>
+          </div>)}
         </SectionPanel>
 
         <SectionPanel title="Work Experience" description="Describe responsibilities and meaningful achievements." icon={<BriefcaseBusiness size={17}/>}>
